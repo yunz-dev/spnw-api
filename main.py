@@ -13,6 +13,18 @@ except Exception as e:
     print(e)
 
 
+def check_login(username: str, password: str) -> (bool, int):
+    users = client["users"]["users"]
+    user = users.find_one({"username": username})
+
+    if user is None:
+        return (False, 404)
+
+    if user["password"] == password:
+        return (True, 200)
+    return (False, 403)
+
+
 @app.get("/")
 def read_root():
     return {"message": "Hello, FastAPI!"}
@@ -26,10 +38,11 @@ def read_item(item_id: int, q: str = None):
 # TODO: parse variables via header
 @app.post("/users/login/user={user}/pass={pw}")
 def login(user: str, pw: str):
-    if user == "yunz" and pw == "<3":
+    valid, code = check_login(user, pw)
+    if valid:
         return {"response": "true"}
     else:
-        raise HTTPException(status_code=403, detail="Permission Denied")
+        raise HTTPException(status_code=code, detail="Permission Denied")
 
 
 @app.get("/habits/token={token}/habit={habit}")
