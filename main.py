@@ -20,3 +20,21 @@ def login(user: str, pw: str):
         return {"response": "true"}
     else:
         raise HTTPException(status_code=403, detail="Permission Denied")
+
+
+@app.get("/habits/token={token}/habit={habit}")
+def get_habit():
+    '''gets specific habit for given user'''
+    return {"response": "yay"}
+
+
+@app.get("/habits/token={token}/")
+def get_habits():
+    '''gets all habits for given user'''
+    return {"response": "yay"}
+
+
+@app.put("/habits/token={token}/hid={hid}")
+def get_habits():
+    '''updates habit'''
+    return {"response": "yay"}
