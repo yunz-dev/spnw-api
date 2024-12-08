@@ -1,6 +1,16 @@
 from fastapi import FastAPI, HTTPException
+from pymongo.mongo_client import MongoClient
+from pymongo.server_api import ServerApi
+from os import getenv
 
 app = FastAPI()
+client = MongoClient(getenv("MONGO_URI"), server_api=ServerApi('1'))
+
+try:
+    client.admin.command('ping')
+    print("Successfully connected to MongoDB!")
+except Exception as e:
+    print(e)
 
 
 @app.get("/")
@@ -35,6 +45,6 @@ def get_habits():
 
 
 @app.put("/habits/token={token}/hid={hid}")
-def get_habits():
+def update_habits():
     '''updates habit'''
     return {"response": "yay"}
