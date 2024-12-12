@@ -34,8 +34,13 @@ def read_root():
 def read_item(item_id: int, q: str = None):
     return {"item_id": item_id, "q": q}
 
+#
+#
+# USER ENDPONTS ---------------------------------------------------------------
 
 # TODO: parse variables via header
+
+
 @app.post("/users/login/user={user}/pass={pw}")
 def login(user: str, pw: str):
     valid, code = check_login(user, pw)
@@ -45,6 +50,14 @@ def login(user: str, pw: str):
         raise HTTPException(status_code=code, detail="Permission Denied")
 
 
+# USER ENDPONTS ---------------------------------------------------------------
+#
+#
+
+
+#
+#
+# HABIT ENDPONTS --------------------------------------------------------------
 @app.get("/habits/token={token}/habit={habit}")
 def get_habit():
     '''gets specific habit for given user'''
@@ -61,3 +74,6 @@ def get_habits():
 def update_habits():
     '''updates habit'''
     return {"response": "yay"}
+# HABIT ENDPONTS --------------------------------------------------------------
+#
+#
