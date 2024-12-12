@@ -12,10 +12,11 @@ def test_normal_login():
         "email": email,
         "password": pw,
     }
-    requests.post(url, json=data)
-    res = requests.post(f"{url}users/login/user={user}/pass={pw}")
+    res = requests.post(f"{url}users/register", json=data)
+    assert res.status_code == 200
+    data = {"username": user, "password": pw}
+    res = requests.post(f"{url}users/login", json=data)
     assert res.status_code == 200
     assert res.json() == {"response": "true"}
-    data = {"username": user, "password": pw}
-    res = requests.post(f"{url}users/delete", json=data)
+    res = requests.delete(f"{url}users", json=data)
     assert res.status_code == 200
