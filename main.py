@@ -15,18 +15,6 @@ except Exception as e:
     print(e)
 
 
-def check_login(username: str, password: str) -> (bool, int):
-    users = client["users"]["users"]
-    user = users.find_one({"username": username})
-
-    if user is None:
-        return (False, 404)
-
-    if user["password"] == password:
-        return (True, 200)
-    return (False, 403)
-
-
 @app.get("/")
 def read_root():
     return {"message": "Hello, FastAPI!"}
@@ -45,6 +33,23 @@ class UserRegistration(BaseModel):
     username: str
     email: EmailStr
     password: str
+
+
+class UserLogin(BaseModel):
+    username: str
+    password: str
+
+
+def check_login(details: UserLogin) -> (bool, int):
+    users = client["users"]["users"]
+    user = users.find_one({"username": details.username})
+
+    if user is None:
+        return (False, 404)
+
+    if verify_pass(details.password, user["password"]):
+        return (True, 200)
+    return (False, 403)
 
 
 def hash_pass(password: str) -> str:
@@ -92,9 +97,9 @@ async def register_user(user: UserRegistration):
 # TODO: parse variables via header
 
 
-@app.post("/users/login/user={user}/pass={pw}")
-def login(user: str, pw: str):
-    valid, code = check_login(user, pw)
+@app.post("/users/login")
+def login(user: UserLogin):
+    valid, code = check_login(user)
     if valid:
         return {"response": "true"}
     else:
