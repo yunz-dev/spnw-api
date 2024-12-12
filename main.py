@@ -1,4 +1,6 @@
 from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel, EmailStr
+import bcrypt
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
 from os import getenv
@@ -34,9 +36,58 @@ def read_root():
 def read_item(item_id: int, q: str = None):
     return {"item_id": item_id, "q": q}
 
+
 #
 #
 # USER ENDPONTS ---------------------------------------------------------------
+
+class UserRegistration(BaseModel):
+    username: str
+    email: EmailStr
+    password: str
+
+
+def hash_pass(password: str) -> str:
+    salt = bcrypt.gensalt()
+    hashed_password = bcrypt.hashpw(password.encode('utf-8'), salt)
+    return hashed_password
+
+
+def verify_pass(password: str, hashed_password: str) -> bool:
+    return bcrypt.checkpw(password.encode('utf-8'), hashed_password)
+
+
+#  TODO: Add more security layers, e.g make password certain length
+
+
+@app.post("/users/register")
+async def register_user(user: UserRegistration):
+    users = client["users"]["users"]
+
+    # check if unique user
+    registered_email = users.find_one({"email": user.email})
+    if registered_email:
+        raise HTTPException(status_code=409, detail="Email Already Exists")
+
+    registered_username = users.find_one({"username": user.username})
+    if registered_username:
+        raise HTTPException(status_code=409, detail="Username Already Exists")
+
+    # Saves user to database
+    # TODO: Hash + Salt Password
+    new_user = {
+        "username": user.username,
+        "email": user.email,
+        "password": hash_pass(user.password),
+    }
+
+    result = users.insert_one(new_user)
+    print(f"new user created in collections users: id: {
+          result.inserted_id}\n user: {new_user}")
+
+    # Returns 200
+    return {"message": "Registration successful", "user":
+            {"username": user.username, "email": user.email}}
 
 # TODO: parse variables via header
 
