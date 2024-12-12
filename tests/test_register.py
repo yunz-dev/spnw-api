@@ -14,6 +14,6 @@ def test_normal_register():
     }
     res = requests.post(f"{url}users/register", json=data)
     assert res.status_code == 200
-    data = {"username": user}
+    data = {"username": user, "password": pw}
     res = requests.post(f"{url}users/delete", json=data)
     assert res.status_code == 200
