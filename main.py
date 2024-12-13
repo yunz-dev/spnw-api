@@ -164,7 +164,6 @@ def login(user: UserLogin):
 # HABIT ENDPONTS --------------------------------------------------------------
 
 class HabitAdd(BaseModel):
-    username: str
     habit_type: str
     habit_name: str
 
@@ -188,12 +187,13 @@ def update_habits():
 
 
 @app.post("/habits")
-def add_habits(token: Annotated[str | None, Header()], habit: HabitAdd):
+def add_habits(spnw_auth_token: Annotated[str | None, Header()], habit: HabitAdd):
     '''adds a habit'''
     users = client["users"]["users"]
+    user_id = get_user_from_session(spnw_auth_token)
 
     # check if user exists
-    user = users.find_one({"username": habit.username})
+    user = users.find_one({"_id": user_id})
     if not user:
         raise HTTPException(status_code=404, detail="User does not exist")
 
@@ -220,7 +220,6 @@ def add_habits(token: Annotated[str | None, Header()], habit: HabitAdd):
     return {
         "message": "Habit added",
         "habit": {
-            "username": habit.username,
             "name": habit.habit_name,
             "type": habit.habit_type,
         },
