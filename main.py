@@ -154,6 +154,17 @@ def login(user: UserLogin):
         raise HTTPException(status_code=code, detail="Permission Denied")
 
 
+@app.post("/users/logout")
+def logout(spnw_auth_token: Annotated[str | None, Header()]):
+    token = spnw_auth_token
+    uid = sessions.get(token, None)
+    if uid:
+        sessions.pop(token)
+        return {"response": "true"}
+    else:
+        raise HTTPException(status_code=401, detail="Bad Token")
+
+
 # USER ENDPONTS ---------------------------------------------------------------
 #
 #
