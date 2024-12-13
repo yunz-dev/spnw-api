@@ -66,6 +66,10 @@ def get_uid_from_user(username: str) -> str | None:
         return None
 
 
+class UserDelete(BaseModel):
+    username: str
+
+
 def check_login(details: UserLogin) -> (bool, int):
     users = client["users"]["users"]
     user = users.find_one({"username": details.username})
@@ -87,8 +91,24 @@ def hash_pass(password: str) -> str:
 def verify_pass(password: str, hashed_password: str) -> bool:
     return bcrypt.checkpw(password.encode('utf-8'), hashed_password)
 
+
 # Helper Functions for Auth -------------------------------------------------
 #
+
+
+@app.delete("/users")
+def delete_user(user: UserLogin):
+    print("dsadsad")
+    valid, code = check_login(user)
+    if valid:
+        users = client["users"]["users"]
+        filter = {"username": user.username}
+        users.delete_one(filter)
+        return {"response": "true"}
+    else:
+        raise HTTPException(status_code=code, detail="Permission Denied")
+
+
 #  TODO: Add more security layers, e.g make password certain length
 
 

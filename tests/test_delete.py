@@ -3,10 +3,10 @@ import requests
 url = "http://127.0.0.1:8000/"
 
 
-def test_login_normal():
-    user = "yunz"
-    email = "yunz@gmail.com"
-    pw = "znuy"
+def test_delete_normal():
+    user = "monkey"
+    email = "monkey@gmail.com"
+    pw = "keymon"
     data = {
         "username": user,
         "email": email,
@@ -22,12 +22,6 @@ def test_login_normal():
             "email": email,
         },
     }
-
-    data = {"username": user, "password": pw}
-    res = requests.post(f"{url}users/login", json=data)
-
-    assert res.status_code == 200
-    assert res.json() == {"response": "true"}
 
     res = requests.delete(f"{url}users", json=data)
 
@@ -35,23 +29,23 @@ def test_login_normal():
     assert res.json() == {"response": "true"}
 
 
-def test_login_no_user():
-    user = "mon"
-    pw = "eeek"
+def test_delete_no_user():
+    user = "key"
+    pw = "pspsps"
     data = {
         "username": user,
         "password": pw,
     }
-    res = requests.post(f"{url}users/login", json=data)
+    res = requests.delete(f"{url}users", json=data)
 
     assert res.status_code == 404
     assert res.json() == {"detail": "Permission Denied"}
 
 
-def test_login_wrong_pass():
-    user = "park"
-    email = "hinga@proton.me"
-    pw = "<3"
+def test_delete_wrong_pass():
+    user = "joey"
+    email = "michal@gmail.com"
+    pw = "lekw"
     data = {
         "username": user,
         "email": email,
@@ -68,8 +62,8 @@ def test_login_wrong_pass():
         },
     }
 
-    data = {"username": user, "password": "wrong password"}
-    res = requests.post(f"{url}users/login", json=data)
+    data = {"username": user, "password": "password"}
+    res = requests.delete(f"{url}users", json=data)
 
     assert res.status_code == 403
     assert res.json() == {"detail": "Permission Denied"}
