@@ -135,8 +135,8 @@ async def register_user(user: UserRegistration):
     }
 
     result = users.insert_one(new_user)
-    print(f"new user created in collections users: id: {
-          result.inserted_id}\n user: {new_user}")
+    print("new user created in collections users: id:"
+          f"{result.inserted_id}\n user: {new_user}")
 
     # Returns 200
     return {"message": "Registration successful", "user":
