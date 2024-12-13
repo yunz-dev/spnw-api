@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Header, Depends
 from pydantic import BaseModel, EmailStr
 import bcrypt
 from pymongo.mongo_client import MongoClient
@@ -92,21 +92,26 @@ def verify_pass(password: str, hashed_password: str) -> bool:
     return bcrypt.checkpw(password.encode('utf-8'), hashed_password)
 
 
+def check_token(spnw_auth_token: str = Header(None)):
+    if not spnw_auth_token:
+        raise HTTPException(
+            status_code=401, detail="Session token is missing or invalid")
+    return spnw_auth_token
+
 # Helper Functions for Auth -------------------------------------------------
 #
 
 
 @app.delete("/users")
-def delete_user(user: UserLogin):
-    print("dsadsad")
-    valid, code = check_login(user)
-    if valid:
+def delete_user(token: str = Depends(check_token)):
+    uid = sessions.get(token, None)
+    if uid:
         users = client["users"]["users"]
-        filter = {"username": user.username}
+        filter = {"_id": uid}
         users.delete_one(filter)
         return {"response": "true"}
     else:
-        raise HTTPException(status_code=code, detail="Permission Denied")
+        raise HTTPException(status_code=401, detail="Bad Token")
 
 
 #  TODO: Add more security layers, e.g make password certain length
