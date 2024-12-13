@@ -162,6 +162,13 @@ def login(user: UserLogin):
 #
 #
 # HABIT ENDPONTS --------------------------------------------------------------
+
+class HabitAdd(BaseModel):
+    username: str
+    habit_type: str
+    habit_name: str
+
+
 @app.get("/habits/token={token}/habit={habit}")
 def get_habit():
     '''gets specific habit for given user'''
@@ -178,6 +185,46 @@ def get_habits():
 def update_habits():
     '''updates habit'''
     return {"response": "yay"}
+
+
+@app.post("/habits")
+def add_habits(token: Annotated[str | None, Header()], habit: HabitAdd):
+    '''adds a habit'''
+    users = client["users"]["users"]
+
+    # check if user exists
+    user = users.find_one({"username": habit.username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User does not exist")
+
+    if habit.habit_type != "custom":
+        raise HTTPException(status_code=404, detail="Habit type does not exist")
+
+    # Adds habit to database
+    new_habit = {
+        "name": habit.habit_name,
+        "streak": 0
+    }
+
+    habits = client["habits"][habit.habit_type]
+    result = habits.insert_one(new_habit)
+
+    # Add habit id to user habits field
+    users.update_one({"_id": user["_id"]}, {
+        "$push": {
+            f"habits.{habit.habit_type}": str(result.inserted_id),
+        },
+    })
+
+    # Returns 200
+    return {
+        "message": "Habit added",
+        "habit": {
+            "username": habit.username,
+            "name": habit.habit_name,
+            "type": habit.habit_type,
+        },
+    }
 # HABIT ENDPONTS --------------------------------------------------------------
 #
 #
