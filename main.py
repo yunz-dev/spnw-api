@@ -1,9 +1,12 @@
-from fastapi import FastAPI, HTTPException
+from typing import Annotated
+from fastapi import FastAPI, HTTPException, Header
 from pydantic import BaseModel, EmailStr
 import bcrypt
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
 from os import getenv
+import secrets
+
 
 app = FastAPI()
 client = MongoClient(getenv("MONGO_URI"), server_api=ServerApi('1'))
@@ -40,6 +43,30 @@ class UserLogin(BaseModel):
     password: str
 
 
+#
+# Helper Functions for Auth -------------------------------------------------
+sessions = {}
+
+
+def create_session(uid: str) -> str:
+    token = secrets.token_hex(32)
+    sessions[token] = uid
+    return token
+
+
+def get_user_from_session(token: str) -> str | None:
+    return sessions.get(token)
+
+
+def get_uid_from_user(username: str) -> str | None:
+    users = client["users"]["users"]
+    user = users.find_one({"username": username})
+    if user:
+        return user["_id"]
+    else:
+        return None
+
+
 class UserDelete(BaseModel):
     username: str
 
@@ -66,17 +93,21 @@ def verify_pass(password: str, hashed_password: str) -> bool:
     return bcrypt.checkpw(password.encode('utf-8'), hashed_password)
 
 
+# Helper Functions for Auth -------------------------------------------------
+#
+
+
 @app.delete("/users")
-def delete_user(user: UserLogin):
-    print("dsadsad")
-    valid, code = check_login(user)
-    if valid:
+def delete_user(spnw_auth_token: Annotated[str | None, Header()]):
+    token = spnw_auth_token
+    uid = sessions.get(token, None)
+    if uid:
         users = client["users"]["users"]
-        filter = {"username": user.username}
+        filter = {"_id": uid}
         users.delete_one(filter)
         return {"response": "true"}
     else:
-        raise HTTPException(status_code=code, detail="Permission Denied")
+        raise HTTPException(status_code=401, detail="Bad Token")
 
 
 #  TODO: Add more security layers, e.g make password certain length
@@ -118,7 +149,7 @@ async def register_user(user: UserRegistration):
 def login(user: UserLogin):
     valid, code = check_login(user)
     if valid:
-        return {"response": "true"}
+        return {"session_token": create_session(get_uid_from_user(user.username))}
     else:
         raise HTTPException(status_code=code, detail="Permission Denied")
 
