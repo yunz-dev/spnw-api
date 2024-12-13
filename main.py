@@ -1,4 +1,5 @@
-from fastapi import FastAPI, HTTPException, Header, Depends
+from typing import Annotated
+from fastapi import FastAPI, HTTPException, Header
 from pydantic import BaseModel, EmailStr
 import bcrypt
 from pymongo.mongo_client import MongoClient
@@ -92,18 +93,13 @@ def verify_pass(password: str, hashed_password: str) -> bool:
     return bcrypt.checkpw(password.encode('utf-8'), hashed_password)
 
 
-def check_token(spnw_auth_token: str = Header(None)):
-    if not spnw_auth_token:
-        raise HTTPException(
-            status_code=401, detail="Session token is missing or invalid")
-    return spnw_auth_token
-
 # Helper Functions for Auth -------------------------------------------------
 #
 
 
 @app.delete("/users")
-def delete_user(token: str = Depends(check_token)):
+def delete_user(spnw_auth_token: Annotated[str | None, Header()]):
+    token = spnw_auth_token
     uid = sessions.get(token, None)
     if uid:
         users = client["users"]["users"]
