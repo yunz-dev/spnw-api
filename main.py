@@ -228,15 +228,15 @@ def update_habit(spnw_auth_token: Annotated[str | None, Header()], habit_info: H
     if habit_info.type != "custom":
         raise HTTPException(status_code=404, detail="Habit type does not exist")
 
-    if habit_info.id not in user["habits"][habit_info.type]:
-        raise HTTPException(status_code=404, detail="Habit does not exist")
-
     habits = client["habits"][habit_info.type]
     user = users.find_one({"_id": user_id})
     habit = habits.find_one({"_id": ObjectId(habit_info.id)})
 
     if not habit:
         raise HTTPException(status_code=404, detail="Habit does not exist")
+
+    if habit_info.id not in user["habits"][habit_info.type]:
+        raise HTTPException(status_code=403, detail="Habit not owned by user")
 
     if habit_info.done:
         if check_habit_done(habit.get("last_done", None)):
