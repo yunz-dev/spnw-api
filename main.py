@@ -174,21 +174,6 @@ def logout(spnw_auth_token: Annotated[str | None, Header()]):
 
 #
 #
-# Helper Functions for habits --------------------------------------------------------------
-
-def check_habit_done(date: dt.datetime) -> bool:
-    """checks if a given date is on the same day as today"""
-    aest = pytz.timezone("Australia/Sydney")
-    if not date:
-        return False
-    today = dt.datetime.now(aest)
-    # make date timezone aware
-    date = date.replace(tzinfo=dt.timezone.utc)
-    date = date.astimezone(aest)
-    return today.date() == date.date()
-
-#
-#
 # HABIT ENDPONTS --------------------------------------------------------------
 
 class HabitAdd(BaseModel):
@@ -202,6 +187,22 @@ class HabitUpdate(BaseModel):
     name: str | None = None
     done: bool | None = None
 
+#
+# Helper Functions for habits -------------------------------------------------
+
+def check_habit_done(date: dt.datetime) -> bool:
+    """checks if a given date is on the same day as today"""
+    aest = pytz.timezone("Australia/Sydney")
+    if not date:
+        return False
+    today = dt.datetime.now(aest)
+    # make date timezone aware
+    date = date.replace(tzinfo=dt.timezone.utc)
+    date = date.astimezone(aest)
+    return today.date() == date.date()
+
+# Helper Functions for habits -------------------------------------------------
+#
 
 @app.get("/habits/token={token}/habit={habit}")
 def get_habit():
@@ -302,6 +303,7 @@ def add_habits(spnw_auth_token: Annotated[str | None, Header()], habit: HabitAdd
             "type": habit.habit_type,
         },
     }
+
 # HABIT ENDPONTS --------------------------------------------------------------
 #
 #
