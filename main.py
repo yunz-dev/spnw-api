@@ -201,6 +201,24 @@ def check_habit_done(date: dt.datetime) -> bool:
     date = date.astimezone(aest)
     return today.date() == date.date()
 
+
+def streak_update(habit: dict, habit_type: str) -> None:
+    """resets streak if its broken"""
+    aest = pytz.timezone("Australia/Sydney")
+    if "last_done" not in habit:
+        return
+    date = habit["last_done"]
+    yesterday = dt.datetime.now(aest) - dt.timedelta(days = 1)
+    # make date timezone aware
+    date = date.replace(tzinfo=dt.timezone.utc)
+    date = date.astimezone(aest)
+
+    if date.date() < yesterday.date() and habit["streak"] != 0:
+        client["habits"][habit_type].update_one({"_id": habit["_id"]}, {
+            "$set": { "streak": 0, },
+        })
+
+
 # Helper Functions for habits -------------------------------------------------
 #
 
@@ -240,6 +258,8 @@ def update_habit(spnw_auth_token: Annotated[str | None, Header()], habit_info: H
         raise HTTPException(status_code=403, detail="Habit not owned by user")
 
     if habit_info.done:
+        streak_update(habit, habit_info.type)
+
         if check_habit_done(habit.get("last_done", None)):
             raise HTTPException(status_code=429, detail="Habit can only be done once a day")
 
