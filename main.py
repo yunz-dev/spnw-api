@@ -4,7 +4,10 @@ from pydantic import BaseModel, EmailStr
 import bcrypt
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
+from bson.objectid import ObjectId
 from os import getenv
+import datetime as dt
+import pytz
 import secrets
 
 
@@ -169,7 +172,6 @@ def logout(spnw_auth_token: Annotated[str | None, Header()]):
 #
 #
 
-
 #
 #
 # HABIT ENDPONTS --------------------------------------------------------------
@@ -178,6 +180,29 @@ class HabitAdd(BaseModel):
     habit_type: str
     habit_name: str
 
+
+class HabitUpdate(BaseModel):
+    id: str
+    type: str
+    name: str | None = None
+    done: bool | None = None
+
+#
+# Helper Functions for habits -------------------------------------------------
+
+def check_habit_done(date: dt.datetime) -> bool:
+    """checks if a given date is on the same day as today"""
+    aest = pytz.timezone("Australia/Sydney")
+    if not date:
+        return False
+    today = dt.datetime.now(aest)
+    # make date timezone aware
+    date = date.replace(tzinfo=dt.timezone.utc)
+    date = date.astimezone(aest)
+    return today.date() == date.date()
+
+# Helper Functions for habits -------------------------------------------------
+#
 
 @app.get("/habits/token={token}/habit={habit}")
 def get_habit():
@@ -191,10 +216,53 @@ def get_habits():
     return {"response": "yay"}
 
 
-@app.put("/habits/token={token}/hid={hid}")
-def update_habits():
-    '''updates habit'''
-    return {"response": "yay"}
+@app.put("/habits")
+def update_habit(spnw_auth_token: Annotated[str | None, Header()], habit_info: HabitUpdate):
+    '''updates a habit'''
+    users = client["users"]["users"]
+    user_id = get_user_from_session(spnw_auth_token)
+
+    user = users.find_one({"_id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="User does not exist")
+
+    if habit_info.type != "custom":
+        raise HTTPException(status_code=404, detail="Habit type does not exist")
+
+    habits = client["habits"][habit_info.type]
+    user = users.find_one({"_id": user_id})
+    habit = habits.find_one({"_id": ObjectId(habit_info.id)})
+
+    if not habit:
+        raise HTTPException(status_code=404, detail="Habit does not exist")
+
+    if habit_info.id not in user["habits"][habit_info.type]:
+        raise HTTPException(status_code=403, detail="Habit not owned by user")
+
+    if habit_info.done:
+        if check_habit_done(habit.get("last_done", None)):
+            raise HTTPException(status_code=429, detail="Habit can only be done once a day")
+
+        habits.update_one({"_id": ObjectId(habit_info.id)}, {
+            "$currentDate": { "last_done": True },
+            "$inc": { "streak": 1 }
+        })
+
+    if habit_info.name:
+        habits.update_one({"_id": ObjectId(habit_info.id)}, {
+            "$set": { "name": habit_info.name }
+        })
+
+    # Query new changes
+    habit = habits.find_one({"_id": ObjectId(habit_info.id)})
+
+    return {
+        "message": "Habit updated",
+        "habit": {
+            "name": habit["name"],
+            "streak": habit["streak"]
+        }
+    }
 
 
 @app.post("/habits")
@@ -235,6 +303,7 @@ def add_habits(spnw_auth_token: Annotated[str | None, Header()], habit: HabitAdd
             "type": habit.habit_type,
         },
     }
+
 # HABIT ENDPONTS --------------------------------------------------------------
 #
 #
