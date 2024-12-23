@@ -187,6 +187,12 @@ class HabitUpdate(BaseModel):
     name: str | None = None
     done: bool | None = None
 
+
+class HabitDelete(BaseModel):
+    id: str
+    type: str
+
+
 #
 # Helper Functions for habits -------------------------------------------------
 
@@ -323,6 +329,40 @@ def add_habits(spnw_auth_token: Annotated[str | None, Header()], habit: HabitAdd
             "type": habit.habit_type,
         },
     }
+
+@app.delete("/habits")
+def delete_habit(spnw_auth_token: Annotated[str | None, Header()], habit_info: HabitDelete):
+    user_id = get_user_from_session(spnw_auth_token)
+
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Bad Token")
+
+    users = client["users"]["users"]
+    user = users.find_one({"_id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="User does not exist")
+
+    if habit_info.type != "custom":
+        raise HTTPException(status_code=404, detail="Habit type does not exist")
+
+    habits = client["habits"][habit_info.type]
+    habit = habits.find_one({"_id": ObjectId(habit_info.id)})
+
+    if not habit:
+        raise HTTPException(status_code=404, detail="Habit does not exist")
+
+    if habit_info.id not in user["habits"][habit_info.type]:
+        raise HTTPException(status_code=403, detail="Habit not owned by user")
+
+    habits.delete_one({"_id": habit["_id"]})
+
+    print(habit["_id"])
+    users.update_one({"_id": user_id}, {
+        "$pull": { f"habits.{habit_info.type}": str( habit["_id"]), },
+    })
+
+    return {"response": "true"}
+
 
 # HABIT ENDPONTS --------------------------------------------------------------
 #
