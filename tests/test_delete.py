@@ -23,26 +23,28 @@ def test_delete_normal():
         },
     }
 
-    res = requests.delete(f"{url}users", json=data)
+    data = {"username": user, "password": pw}
+    res = requests.post(f"{url}users/login", json=data)
+
+    assert res.status_code == 200
+    assert "session_token" in res.json()
+
+    headers = {"spnw-auth-token": res.json()["session_token"]}
+    res = requests.delete(f"{url}users", headers=headers)
 
     assert res.status_code == 200
     assert res.json() == {"response": "true"}
 
 
 def test_delete_no_user():
-    user = "key"
-    pw = "pspsps"
-    data = {
-        "username": user,
-        "password": pw,
-    }
-    res = requests.delete(f"{url}users", json=data)
+    headers = {"spnw-auth-token": "eeee"}
+    res = requests.delete(f"{url}users", headers=headers)
 
-    assert res.status_code == 404
-    assert res.json() == {"detail": "Permission Denied"}
+    assert res.status_code == 401
+    assert res.json() == {"detail": "Bad Token"}
 
 
-def test_delete_wrong_pass():
+def test_delete_twice():
     user = "joey"
     email = "michal@gmail.com"
     pw = "lekw"
@@ -62,14 +64,19 @@ def test_delete_wrong_pass():
         },
     }
 
-    data = {"username": user, "password": "password"}
-    res = requests.delete(f"{url}users", json=data)
-
-    assert res.status_code == 403
-    assert res.json() == {"detail": "Permission Denied"}
-
     data = {"username": user, "password": pw}
-    res = requests.delete(f"{url}users", json=data)
+    res = requests.post(f"{url}users/login", json=data)
+
+    assert res.status_code == 200
+    assert "session_token" in res.json()
+
+    headers = {"spnw-auth-token": res.json()["session_token"]}
+    res = requests.delete(f"{url}users", headers=headers)
 
     assert res.status_code == 200
     assert res.json() == {"response": "true"}
+
+    res = requests.delete(f"{url}users", headers=headers)
+
+    assert res.status_code == 401
+    assert res.json() == {"detail": "Bad Token"}

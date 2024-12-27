@@ -24,7 +24,13 @@ def test_normal_register():
     }
 
     data = {"username": user, "password": pw}
-    res = requests.delete(f"{url}users", json=data)
+    res = requests.post(f"{url}users/login", json=data)
+
+    assert res.status_code == 200
+    assert "session_token" in res.json()
+
+    headers = {"spnw-auth-token": res.json()["session_token"]}
+    res = requests.delete(f"{url}users", headers=headers)
 
     assert res.status_code == 200
     assert res.json() == {"response": "true"}
@@ -61,7 +67,13 @@ def test_same_name_register():
     assert res.json() == {"detail": "Username Already Exists"}
 
     data = {"username": user, "password": pw}
-    res = requests.delete(f"{url}users", json=data)
+    res = requests.post(f"{url}users/login", json=data)
+
+    assert res.status_code == 200
+    assert "session_token" in res.json()
+
+    headers = {"spnw-auth-token": res.json()["session_token"]}
+    res = requests.delete(f"{url}users", headers=headers)
 
     assert res.status_code == 200
     assert res.json() == {"response": "true"}
@@ -98,7 +110,13 @@ def test_email_name_register():
     assert res.json() == {"detail": "Email Already Exists"}
 
     data = {"username": user, "password": pw}
-    res = requests.delete(f"{url}users", json=data)
+    res = requests.post(f"{url}users/login", json=data)
+
+    assert res.status_code == 200
+    assert "session_token" in res.json()
+
+    headers = {"spnw-auth-token": res.json()["session_token"]}
+    res = requests.delete(f"{url}users", headers=headers)
 
     assert res.status_code == 200
     assert res.json() == {"response": "true"}
