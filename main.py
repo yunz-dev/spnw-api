@@ -177,8 +177,8 @@ def logout(spnw_auth_token: Annotated[str | None, Header()]):
 # HABIT ENDPONTS --------------------------------------------------------------
 
 class HabitAdd(BaseModel):
-    habit_type: str
-    habit_name: str
+    type: str
+    name: str
 
 
 class HabitUpdate(BaseModel):
@@ -195,6 +195,39 @@ class HabitDelete(BaseModel):
 
 #
 # Helper Functions for habits -------------------------------------------------
+
+def check_uid(uid: ObjectId):
+    """check uid exists"""
+    if not uid:
+        raise HTTPException(status_code=401, detail="Bad Token")
+
+def check_user(user: dict):
+    """check user exists"""
+    if not user:
+        raise HTTPException(status_code=404, detail="User does not exist")
+
+
+def check_habit_type(habit_type: str):
+    """check habit type exists"""
+    if habit_type != "custom":
+        raise HTTPException(status_code=404, detail="Habit type does not exist")
+
+
+def check_id(id: str):
+    """check id is a valid mongo db object id"""
+    if not ObjectId.is_valid(id):
+        raise HTTPException(status_code=422, detail="Invalid id")
+
+
+def check_habit(type: str, habit: dict, owner: dict):
+    """check habit exists and is owned by owner"""
+    if not habit:
+        raise HTTPException(status_code=404, detail="Habit does not exist")
+
+    if str(habit["_id"]) not in owner["habits"][type]:
+        raise HTTPException(status_code=403, detail="Habit not owned by user")
+
+
 
 def check_habit_done(date: dt.datetime) -> bool:
     """checks if a given date is on the same day as today"""
@@ -243,25 +276,19 @@ def get_habits():
 @app.put("/habits")
 def update_habit(spnw_auth_token: Annotated[str | None, Header()], habit_info: HabitUpdate):
     '''updates a habit'''
-    users = client["users"]["users"]
     user_id = get_user_from_session(spnw_auth_token)
+    check_uid(user_id)
 
+    users = client["users"]["users"]
     user = users.find_one({"_id": user_id})
-    if not user:
-        raise HTTPException(status_code=404, detail="User does not exist")
 
-    if habit_info.type != "custom":
-        raise HTTPException(status_code=404, detail="Habit type does not exist")
+    check_user(user)
+    check_habit_type(habit_info.type)
+    check_id(habit_info.id)
 
     habits = client["habits"][habit_info.type]
-    user = users.find_one({"_id": user_id})
     habit = habits.find_one({"_id": ObjectId(habit_info.id)})
-
-    if not habit:
-        raise HTTPException(status_code=404, detail="Habit does not exist")
-
-    if habit_info.id not in user["habits"][habit_info.type]:
-        raise HTTPException(status_code=403, detail="Habit not owned by user")
+    check_habit(habit_info.type, habit, user)
 
     if habit_info.done:
         streak_update(habit, habit_info.type)
@@ -292,32 +319,30 @@ def update_habit(spnw_auth_token: Annotated[str | None, Header()], habit_info: H
 
 
 @app.post("/habits")
-def add_habits(spnw_auth_token: Annotated[str | None, Header()], habit: HabitAdd):
+def add_habits(spnw_auth_token: Annotated[str | None, Header()], habit_info: HabitAdd):
     '''adds a habit'''
-    users = client["users"]["users"]
     user_id = get_user_from_session(spnw_auth_token)
+    check_uid(user_id)
 
-    # check if user exists
+    users = client["users"]["users"]
     user = users.find_one({"_id": user_id})
-    if not user:
-        raise HTTPException(status_code=404, detail="User does not exist")
 
-    if habit.habit_type != "custom":
-        raise HTTPException(status_code=404, detail="Habit type does not exist")
+    check_user(user)
+    check_habit_type(habit_info.type)
 
     # Adds habit to database
     new_habit = {
-        "name": habit.habit_name,
+        "name": habit_info.name,
         "streak": 0
     }
 
-    habits = client["habits"][habit.habit_type]
+    habits = client["habits"][habit_info.type]
     result = habits.insert_one(new_habit)
 
     # Add habit id to user habits field
     users.update_one({"_id": user["_id"]}, {
         "$push": {
-            f"habits.{habit.habit_type}": str(result.inserted_id),
+            f"habits.{habit_info.type}": str(result.inserted_id),
         },
     })
 
@@ -325,38 +350,31 @@ def add_habits(spnw_auth_token: Annotated[str | None, Header()], habit: HabitAdd
     return {
         "message": "Habit added",
         "habit": {
-            "name": habit.habit_name,
-            "type": habit.habit_type,
+            "id": str(result.inserted_id),
+            "name": habit_info.name,
+            "type": habit_info.type,
         },
     }
 
 @app.delete("/habits")
 def delete_habit(spnw_auth_token: Annotated[str | None, Header()], habit_info: HabitDelete):
     user_id = get_user_from_session(spnw_auth_token)
-
-    if not user_id:
-        raise HTTPException(status_code=401, detail="Bad Token")
+    check_uid(user_id)
 
     users = client["users"]["users"]
     user = users.find_one({"_id": user_id})
-    if not user:
-        raise HTTPException(status_code=404, detail="User does not exist")
 
-    if habit_info.type != "custom":
-        raise HTTPException(status_code=404, detail="Habit type does not exist")
+    check_user(user)
+    check_habit_type(habit_info.type)
+    check_id(habit_info.id)
 
     habits = client["habits"][habit_info.type]
     habit = habits.find_one({"_id": ObjectId(habit_info.id)})
 
-    if not habit:
-        raise HTTPException(status_code=404, detail="Habit does not exist")
-
-    if habit_info.id not in user["habits"][habit_info.type]:
-        raise HTTPException(status_code=403, detail="Habit not owned by user")
+    check_habit(habit_info.type, habit, user)
 
     habits.delete_one({"_id": habit["_id"]})
 
-    print(habit["_id"])
     users.update_one({"_id": user_id}, {
         "$pull": { f"habits.{habit_info.type}": str( habit["_id"]), },
     })
