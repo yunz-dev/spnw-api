@@ -61,6 +61,10 @@ def get_user_from_session(token: str) -> str | None:
     return sessions.get(token)
 
 
+def remove_from_session(token: str):
+    sessions.pop(token, None)
+
+
 def get_uid_from_user(username: str) -> str | None:
     users = client["users"]["users"]
     user = users.find_one({"username": username})
@@ -108,6 +112,7 @@ def delete_user(spnw_auth_token: Annotated[str | None, Header()]):
         users = client["users"]["users"]
         filter = {"_id": uid}
         users.delete_one(filter)
+        remove_from_session(token)
         return {"response": "true"}
     else:
         raise HTTPException(status_code=401, detail="Bad Token")
