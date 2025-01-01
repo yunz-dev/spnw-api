@@ -219,12 +219,13 @@ def check_id(id: str):
         raise HTTPException(status_code=422, detail="Invalid id")
 
 
-def check_habit(type: str, habit: dict, owner: dict):
+def check_habit(typ: str, habit: dict, owner: dict):
     """check habit exists and is owned by owner"""
     if not habit:
         raise HTTPException(status_code=404, detail="Habit does not exist")
 
-    if str(habit["_id"]) not in owner["habits"][type]:
+    if (typ not in owner.get("habits", {})
+            or str(habit["_id"]) not in owner["habits"][typ]):
         raise HTTPException(status_code=403, detail="Habit not owned by user")
 
 
