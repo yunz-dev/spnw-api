@@ -1,29 +1,32 @@
+import datetime as dt
+import secrets
+from os import getenv
 from typing import Annotated
-from fastapi import FastAPI, HTTPException, Header
-from pydantic import BaseModel, EmailStr
+
 import bcrypt
+import pytz
+from bson.objectid import ObjectId
+from fastapi import FastAPI, Form, Header, HTTPException, Request
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
+from pydantic import BaseModel, EmailStr
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
-from bson.objectid import ObjectId
-from os import getenv
-import datetime as dt
-import pytz
-import secrets
-
 
 app = FastAPI()
-client = MongoClient(getenv("MONGO_URI"), server_api=ServerApi('1'))
+client = MongoClient(getenv("MONGO_URI"), server_api=ServerApi("1"))
+templates = Jinja2Templates(directory="templates")
 
 try:
-    client.admin.command('ping')
+    client.admin.command("ping")
     print("Successfully connected to MongoDB!")
 except Exception as e:
     print(e)
 
 
-@app.get("/")
-def read_root():
-    return {"message": "Hello, FastAPI!"}
+@app.get("/", response_class=HTMLResponse)
+def read_root(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
 
 
 @app.get("/items/{item_id}")
@@ -34,6 +37,7 @@ def read_item(item_id: int, q: str = None):
 #
 #
 # USER ENDPONTS ---------------------------------------------------------------
+
 
 class UserRegistration(BaseModel):
     username: str
@@ -92,12 +96,12 @@ def check_login(details: UserLogin) -> (bool, int):
 
 def hash_pass(password: str) -> str:
     salt = bcrypt.gensalt()
-    hashed_password = bcrypt.hashpw(password.encode('utf-8'), salt)
+    hashed_password = bcrypt.hashpw(password.encode("utf-8"), salt)
     return hashed_password
 
 
 def verify_pass(password: str, hashed_password: str) -> bool:
-    return bcrypt.checkpw(password.encode('utf-8'), hashed_password)
+    return bcrypt.checkpw(password.encode("utf-8"), hashed_password)
 
 
 # Helper Functions for Auth -------------------------------------------------
@@ -143,12 +147,17 @@ async def register_user(user: UserRegistration):
     }
 
     result = users.insert_one(new_user)
-    print("new user created in collections users: id:"
-          f"{result.inserted_id}\n user: {new_user}")
+    print(
+        "new user created in collections users: id:"
+        f"{result.inserted_id}\n user: {new_user}"
+    )
 
     # Returns 200
-    return {"message": "Registration successful", "user":
-            {"username": user.username, "email": user.email}}
+    return {
+        "message": "Registration successful",
+        "user": {"username": user.username, "email": user.email},
+    }
+
 
 # TODO: parse variables via header
 
@@ -181,6 +190,7 @@ def logout(spnw_auth_token: Annotated[str | None, Header()]):
 #
 # HABIT ENDPONTS --------------------------------------------------------------
 
+
 class HabitAdd(BaseModel):
     type: str
     name: str
@@ -201,10 +211,12 @@ class HabitDelete(BaseModel):
 #
 # Helper Functions for habits -------------------------------------------------
 
+
 def check_uid(uid: ObjectId):
     """check uid exists"""
     if not uid:
         raise HTTPException(status_code=401, detail="Bad Token")
+
 
 def check_user(user: dict):
     """check user exists"""
@@ -229,10 +241,11 @@ def check_habit(typ: str, habit: dict, owner: dict):
     if not habit:
         raise HTTPException(status_code=404, detail="Habit does not exist")
 
-    if (typ not in owner.get("habits", {})
-            or str(habit["_id"]) not in owner["habits"][typ]):
+    if (
+        typ not in owner.get("habits", {})
+        or str(habit["_id"]) not in owner["habits"][typ]
+    ):
         raise HTTPException(status_code=403, detail="Habit not owned by user")
-
 
 
 def check_habit_done(date: dt.datetime) -> bool:
@@ -253,35 +266,43 @@ def streak_update(habit: dict, habit_type: str) -> None:
     if "last_done" not in habit:
         return
     date = habit["last_done"]
-    yesterday = dt.datetime.now(aest) - dt.timedelta(days = 1)
+    yesterday = dt.datetime.now(aest) - dt.timedelta(days=1)
     # make date timezone aware
     date = date.replace(tzinfo=dt.timezone.utc)
     date = date.astimezone(aest)
 
     if date.date() < yesterday.date() and habit["streak"] != 0:
-        client["habits"][habit_type].update_one({"_id": habit["_id"]}, {
-            "$set": { "streak": 0, },
-        })
+        client["habits"][habit_type].update_one(
+            {"_id": habit["_id"]},
+            {
+                "$set": {
+                    "streak": 0,
+                },
+            },
+        )
 
 
 # Helper Functions for habits -------------------------------------------------
 #
 
+
 @app.get("/habits/token={token}/habit={habit}")
 def get_habit():
-    '''gets specific habit for given user'''
+    """gets specific habit for given user"""
     return {"response": "yay"}
 
 
 @app.get("/habits/token={token}/")
 def get_habits():
-    '''gets all habits for given user'''
+    """gets all habits for given user"""
     return {"response": "yay"}
 
 
 @app.put("/habits")
-def update_habit(spnw_auth_token: Annotated[str | None, Header()], habit_info: HabitUpdate):
-    '''updates a habit'''
+def update_habit(
+    spnw_auth_token: Annotated[str | None, Header()], habit_info: HabitUpdate
+):
+    """updates a habit"""
     user_id = get_user_from_session(spnw_auth_token)
     check_uid(user_id)
 
@@ -300,33 +321,32 @@ def update_habit(spnw_auth_token: Annotated[str | None, Header()], habit_info: H
         streak_update(habit, habit_info.type)
 
         if check_habit_done(habit.get("last_done", None)):
-            raise HTTPException(status_code=429, detail="Habit can only be done once a day")
+            raise HTTPException(
+                status_code=429, detail="Habit can only be done once a day"
+            )
 
-        habits.update_one({"_id": ObjectId(habit_info.id)}, {
-            "$currentDate": { "last_done": True },
-            "$inc": { "streak": 1 }
-        })
+        habits.update_one(
+            {"_id": ObjectId(habit_info.id)},
+            {"$currentDate": {"last_done": True}, "$inc": {"streak": 1}},
+        )
 
     if habit_info.name:
-        habits.update_one({"_id": ObjectId(habit_info.id)}, {
-            "$set": { "name": habit_info.name }
-        })
+        habits.update_one(
+            {"_id": ObjectId(habit_info.id)}, {"$set": {"name": habit_info.name}}
+        )
 
     # Query new changes
     habit = habits.find_one({"_id": ObjectId(habit_info.id)})
 
     return {
         "message": "Habit updated",
-        "habit": {
-            "name": habit["name"],
-            "streak": habit["streak"]
-        }
+        "habit": {"name": habit["name"], "streak": habit["streak"]},
     }
 
 
 @app.post("/habits")
 def add_habits(spnw_auth_token: Annotated[str | None, Header()], habit_info: HabitAdd):
-    '''adds a habit'''
+    """adds a habit"""
     user_id = get_user_from_session(spnw_auth_token)
     check_uid(user_id)
 
@@ -337,20 +357,20 @@ def add_habits(spnw_auth_token: Annotated[str | None, Header()], habit_info: Hab
     check_habit_type(habit_info.type)
 
     # Adds habit to database
-    new_habit = {
-        "name": habit_info.name,
-        "streak": 0
-    }
+    new_habit = {"name": habit_info.name, "streak": 0}
 
     habits = client["habits"][habit_info.type]
     result = habits.insert_one(new_habit)
 
     # Add habit id to user habits field
-    users.update_one({"_id": user["_id"]}, {
-        "$push": {
-            f"habits.{habit_info.type}": str(result.inserted_id),
+    users.update_one(
+        {"_id": user["_id"]},
+        {
+            "$push": {
+                f"habits.{habit_info.type}": str(result.inserted_id),
+            },
         },
-    })
+    )
 
     # Returns 200
     return {
@@ -362,8 +382,11 @@ def add_habits(spnw_auth_token: Annotated[str | None, Header()], habit_info: Hab
         },
     }
 
+
 @app.delete("/habits")
-def delete_habit(spnw_auth_token: Annotated[str | None, Header()], habit_info: HabitDelete):
+def delete_habit(
+    spnw_auth_token: Annotated[str | None, Header()], habit_info: HabitDelete
+):
     user_id = get_user_from_session(spnw_auth_token)
     check_uid(user_id)
 
@@ -381,13 +404,36 @@ def delete_habit(spnw_auth_token: Annotated[str | None, Header()], habit_info: H
 
     habits.delete_one({"_id": habit["_id"]})
 
-    users.update_one({"_id": user_id}, {
-        "$pull": { f"habits.{habit_info.type}": str( habit["_id"]), },
-    })
+    users.update_one(
+        {"_id": user_id},
+        {
+            "$pull": {
+                f"habits.{habit_info.type}": str(habit["_id"]),
+            },
+        },
+    )
 
     return {"response": "true"}
 
 
-# HABIT ENDPONTS --------------------------------------------------------------
+# HABIT ENDPOINTS --------------------------------------------------------------
+#
+#
+
+
+#
+#
+# FE ENDPOINTS -----------------------------------------------------------------
+@app.get("/fe/test", response_class=HTMLResponse)
+def update():
+    return "<p>Hello from WORdsad!</p>"
+
+
+@app.post("/fe/submit", response_class=HTMLResponse)
+def submit(data: str = Form(...)):
+    return f"<p>You submitted: {data}</p>"
+
+
+# FE ENDPOINTS -----------------------------------------------------------------
 #
 #
