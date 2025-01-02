@@ -273,10 +273,17 @@ def get_habit():
     return {"response": "yay"}
 
 
-@app.get("/habits/token={token}/")
-def get_habits():
+@app.get("/habits/")
+def get_habits(spnw_auth_token: Annotated[str | None, Header()]):
     '''gets all habits for given user'''
-    return {"response": "yay"}
+    user_id = get_user_from_session(spnw_auth_token)
+    check_uid(user_id)
+
+    users = client["users"]["users"]
+    user = users.find_one({"_id": user_id})
+    check_user(user)
+
+    return user.get("habits", {})
 
 
 @app.put("/habits")
