@@ -267,13 +267,31 @@ def streak_update(habit: dict, habit_type: str) -> None:
 # Helper Functions for habits -------------------------------------------------
 #
 
-@app.get("/habits/token={token}/habit={habit}")
-def get_habit():
+@app.get("/habit/hid={habit}/type={type}")
+def get_habit(spnw_auth_token: Annotated[str | None, Header()], hid: str, habit_type: str):
     '''gets specific habit for given user'''
-    return {"response": "yay"}
+    user_id = get_user_from_session(spnw_auth_token)
+    check_uid(user_id)
+
+    users = client["users"]["users"]
+    user = users.find_one({"_id": user_id})
+
+    check_user(user)
+    check_habit_type(habit_type)
+    check_id(hid)
+
+    habits = client["habits"][habit_type]
+    habit = habits.find_one({"_id": ObjectId(hid)})
+    check_habit(habit_type, habit, user)
+
+    return {
+        "name": habit["name"],
+        "streak": habit["streak"],
+        "last_done": habit.get("last_done", None)
+    }
 
 
-@app.get("/habits/")
+@app.get("/habits")
 def get_habits(spnw_auth_token: Annotated[str | None, Header()]):
     '''gets all habits for given user'''
     user_id = get_user_from_session(spnw_auth_token)
