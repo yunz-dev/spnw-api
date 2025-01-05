@@ -464,6 +464,19 @@ def submit(data: str = Form(...)):
     return f"<p>You submitted: {data}</p>"
 
 
+@app.get("/fe/dashboard", response_class=HTMLResponse)
+def dashboard(request: Request):
+    return templates.TemplateResponse("dashboard.html", {"request": request})
+
+
+@app.get("/fe/all-tasks", response_class=HTMLResponse)
+def all_tasks(request: Request):
+    tasks = [{"title": "German Study", "streak": "🔥 4", "done": True},
+             {"title": "Exercise", "streak": "🔥 10", "done": False},
+             {"title": "Don't open league", "streak": "0", "done": False}]
+    task_temp = templates.get_template("task.html")
+    return "".join([task_temp.render(t) for t in tasks])
+
 # FE ENDPOINTS -----------------------------------------------------------------
 #
 #

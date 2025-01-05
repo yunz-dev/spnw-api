@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>SPNW Dashboard</title>
+        <script src="https://unpkg.com/alpinejs" defer></script>
+        <script src="https://unpkg.com/htmx.org"></script>
+        <link
+            href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+            rel="stylesheet"
+        />
+    </head>
+    <body>
+        {% include 'navbar.html' %}
+        <div class="flex content-center justify-between p-4">
+            <h1>Tasks</h1>
+            <button type="button">🍔</button>
+        </div>
+        <hr>
+        <div class="mt-6 border-solid border-2 p-5 gap-3 flex flex-col" hx-get="/fe/all-tasks" hx-trigger="load once">
+        </div>
+    </body>
+</html>
