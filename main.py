@@ -267,7 +267,7 @@ def streak_update(habit: dict, habit_type: str) -> None:
 # Helper Functions for habits -------------------------------------------------
 #
 
-@app.get("/habit/hid={habit}/type={type}")
+@app.get("/habit")
 def get_habit(spnw_auth_token: Annotated[str | None, Header()], hid: str, habit_type: str):
     '''gets specific habit for given user'''
     user_id = get_user_from_session(spnw_auth_token)
