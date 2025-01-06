@@ -11,14 +11,17 @@
             rel="stylesheet"
         />
     </head>
-    <body>
+    <body class="bg-blue-600 flex flex-col items-center flex-wrap">
         {% include 'navbar.html' %}
-        <div class="flex content-center justify-between p-4">
-            <h1>Tasks</h1>
+        <div class="flex content-center justify-between p-4 w-4/5">
+            <h1 class="text-white font-bold text-2xl">Tasks</h1>
             <button type="button">🍔</button>
         </div>
-        <hr>
-        <div class="mt-6 p-5 gap-3 flex flex-col content-center flex-wrap" hx-get="/fe/all-tasks" hx-trigger="load once">
+        <hr class="w-4/5">
+        <div class="mt-6 p-5 gap-3 flex flex-col items-center flex-wrap w-4/5" hx-get="/fe/all-tasks" hx-trigger="load once" hx-swap="afterbegin">
+            <div class="flex justify-around p-5 border-2 rounded-md w-full bg-gray-900 bg-opacity-20 text-white font-semibold text-lg border-dashed cursor-pointer">
+                <h1>+ Add Task</h1>
+            </div>
         </div>
     </body>
 </html>
