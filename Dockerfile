@@ -7,8 +7,7 @@ WORKDIR /app
 COPY flake.nix .
 COPY flake.lock .
 
-RUN nix build .#appEnv && \
-    mv result /env
+RUN nix develop
 
 ENV PATH=/env/bin:$PATH
 
