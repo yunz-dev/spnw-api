@@ -1,20 +1,12 @@
-FROM nixos/nix:2.16.1
+FROM python:latest
 
-RUN nix-env -iA nixpkgs.nixFlakes && \
-    echo "experimental-features = nix-command flakes" >> /etc/nix/nix.conf
+WORKDIR /
 
-WORKDIR /app
-
-COPY flake.nix .
-COPY flake.lock .
-
-RUN nix develop
-
-ENV PATH=/env/bin:$PATH
-
-COPY . .
+COPY requirements.txt /
 
 RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . /
 
 EXPOSE 5555
 
