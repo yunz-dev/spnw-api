@@ -1,6 +1,7 @@
 FROM nixos/nix:2.16.1
 
-RUN nix-env -iA nixpkgs.nixFlakes
+RUN nix-env -iA nixpkgs.nixFlakes && \
+    echo "experimental-features = nix-command flakes" >> /etc/nix/nix.conf
 
 WORKDIR /app
 
