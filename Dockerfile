@@ -2,6 +2,7 @@ FROM python:latest
 
 WORKDIR /
 
+#install python libraries
 COPY requirements.txt /
 
 RUN pip install --no-cache-dir -r requirements.txt
