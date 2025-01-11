@@ -471,8 +471,8 @@ def dashboard(request: Request):
 
 @app.get("/fe/all-tasks", response_class=HTMLResponse)
 def all_tasks(request: Request):
-    tasks = [{"title": "German Study", "streak": "🔥 4", "done": True, "id": "id", "type": "custom"},
-             {"title": "Exercise", "streak": "🔥 10", "done": False, "id": "id", "type": "custom"},
+    tasks = [{"title": "German Study", "streak": "4", "done": True, "id": "id", "type": "custom"},
+             {"title": "Exercise", "streak": "10", "done": False, "id": "id", "type": "custom"},
              {"title": "Don't open league", "streak": "0", "done": False, "id": "id", "type": "custom"}]
     task_temp = templates.get_template("task.html")
     return "".join([task_temp.render(t) for t in tasks])
