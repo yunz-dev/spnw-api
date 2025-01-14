@@ -1,0 +1,51 @@
+<div
+    x-show="add_task"
+    style="display: none"
+    class="flex flex-col items-center justify-center fixed top-0 right-0 bottom-0 left-0 z-50 bg-black/50"
+>
+    <div
+        @click="add_task = false"
+        class="absolute -z-[1] top-0 right-0 bottom-0 left-0"
+    ></div>
+    <div
+        class="bg-blue-300 flex flex-col p-5 rounded-lg">
+        <form
+            hx-post="/habits"
+            hx-target="#add-task-button"
+            hx-ext="json-enc"
+            hx-swap="beforebegin"
+            hx-headers='js:{"spnw-auth-token": getAuthToken(), "Accept": "text/html"}'
+            class="flex flex-col gap-5"
+        >
+            <div>
+                <label>Name</label>
+                <input name="name" type="text" placeholder="Task name" value="" class="bg-gray-200"/>
+            </div>
+
+            <div class="flex flex-row gap-2">
+                <label>Type</label>
+                <!-- TODO: switch with htmx request to query all types -->
+                <select name="type">
+                    <option value="custom">custom</option>
+                </select>
+            </div>
+
+            <div class="flex flex-row items-center justify-between">
+                <button
+                    type="button"
+                    class="cursor-pointer whitespace-nowrap rounded-md bg-black px-4 py-2 text-sm font-medium tracking-wide text-neutral-100 transition hover:opacity-75 text-center focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black active:opacity-100 active:outline-offset-0 disabled:opacity-75 disabled:cursor-not-allowed dark:bg-white dark:text-black dark:focus-visible:outline-white"
+                    @click="add_task = false"
+                >
+                    Cancel
+                </button>
+                <button
+                    type="submit"
+                    class="cursor-pointer whitespace-nowrap rounded-md bg-sky-500 px-4 py-2 text-sm font-medium tracking-wide text-white transition hover:opacity-75 text-center focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 active:opacity-100 active:outline-offset-0 disabled:opacity-75 disabled:cursor-not-allowed dark:bg-sky-500 dark:text-white dark:focus-visible:outline-sky-500"
+                    @click="add_task = false"
+                >
+                    Add
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

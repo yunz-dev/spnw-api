@@ -328,7 +328,7 @@ def get_habit(
     check_habit(habit_type, habit, user)
 
     streak_update(habit, habit_type)
-    habit = client["habits"][habit_type].find_one({"_id": ObjectId(id)})
+    habit = client["habits"][habit_type].find_one({"_id": ObjectId(hid)})
 
     return {
         "name": habit["name"],
@@ -400,7 +400,7 @@ def update_habit(
 
 
 @app.post("/habits")
-def add_habits(spnw_auth_token: Annotated[str | None, Header()], habit_info: HabitAdd):
+def add_habits(spnw_auth_token: Annotated[str | None, Header()], habit_info: HabitAdd, Accept: Annotated[str | None, Header()] = None):
     """adds a habit"""
     user_id = get_user_from_session(spnw_auth_token)
     check_uid(user_id)
@@ -427,6 +427,16 @@ def add_habits(spnw_auth_token: Annotated[str | None, Header()], habit_info: Hab
         },
     )
 
+    if Accept == "text/html":
+        task_temp = templates.get_template("task.html")
+        html = task_temp.render({
+            "title": habit_info.name,
+            "streak": 0,
+            "done": False,
+            "id": str(result.inserted_id),
+            "type": habit_info.type
+        })
+        return HTMLResponse(content=html, status_code=200)
     # Returns 200
     return {
         "message": "Habit added",
