@@ -30,10 +30,12 @@ except Exception as e:
 
 
 @app.get("/", response_class=HTMLResponse)
-def read_root(request: Request, cookies: Annotated[TokenCookie, Cookie()] = None):
-    if cookies is None:
+# def read_root(request: Request, cookies: Annotated[TokenCookie, Cookie()] = None):
+def read_root(request: Request):
+    cookie_token = request.cookies.get("session_token", None)
+    if cookie_token is None:
         return RedirectResponse(url="/login", status_code=302)
-    if get_user_from_session(cookies.session_token) is None:
+    if get_user_from_session(cookie_token) is None:
         return RedirectResponse(url="/login", status_code=302)
     else:
         return RedirectResponse(url="fe/dashboard", status_code=302)
