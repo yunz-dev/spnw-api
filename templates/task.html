@@ -1,4 +1,10 @@
-<div class="flex flex-row items-center justify-between p-5 border-2 rounded-md w-full bg-gray-900 bg-opacity-20 text-white font-semibold text-lg">
+<div
+    hx-get="/fe/task"
+    hx-trigger="{{id}} from:body"
+    hx-vals='{"hid": "{{id}}", "type": "{{type}}"}'
+    hx-swap="outerHTML"
+    class="flex flex-row items-center justify-between p-5 border-2 rounded-md w-full bg-gray-900 bg-opacity-20 text-white font-semibold text-lg"
+>
     <h1>{{title}}</h1>
     <span style="min-width:100px;" class="flex flex-row justify-end gap-2 items-center">
         <h1 class="flex items-center gap-1">
@@ -16,7 +22,7 @@
             :disabled="checked"
             hx-swap="none"
             hx-put="/habits"
-            hx-headers='js:{"spnw-auth-token": get_auth_token()}'
+            hx-headers='js:{"spnw-auth-token": getAuthToken()}'
             hx-ext="json-enc"
             hx-vals='{"id": "{{id}}", "type": "{{type}}", "done": true}'
             class="size-5 rounded-lg accent-white"

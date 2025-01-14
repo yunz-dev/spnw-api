@@ -8,6 +8,14 @@
         <script src="https://unpkg.com/htmx.org"></script>
         <script src="https://unpkg.com/htmx.org/dist/ext/json-enc.js"></script>
         <script src="https://cdn.tailwindcss.com"></script>
+        <script>
+        function getAuthToken() {
+            const name = "spnw_auth_token"
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+        }
+        </script>
     </head>
     <body class="bg-blue-500 flex flex-col items-center flex-wrap">
         {% include 'navbar.html' %}
@@ -43,9 +51,9 @@
         <hr class="w-4/5"/>
         <div
             class="mt-6 p-5 gap-3 flex flex-col items-center flex-wrap w-4/5"
-            hx-get="/fe/all-tasks"
-            hx-trigger="load once"
-            hx-swap="afterbegin"
+                hx-get="/fe/all-tasks"
+                hx-trigger="load"
+                hx-swap="afterbegin"
         >
             <div class="flex justify-around p-5 border-2 rounded-md w-full bg-gray-900 bg-opacity-20 text-white font-semibold text-lg border-dashed cursor-pointer">
                 <h1 class="flex items-center gap-2">
