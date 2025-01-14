@@ -308,6 +308,9 @@ def get_habit(spnw_auth_token: Annotated[str | None, Header()], hid: str, habit_
     habit = habits.find_one({"_id": ObjectId(hid)})
     check_habit(habit_type, habit, user)
 
+    streak_update(habit, typ)
+    habit = client["habits"][typ].find_one({"_id": ObjectId(id)})
+
     return {
         "name": habit["name"],
         "streak": habit["streak"],
