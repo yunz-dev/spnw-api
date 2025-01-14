@@ -34,6 +34,11 @@ def read_root(request: Request):
     return templates.TemplateResponse("login.html", {"request": request})
 
 
+@app.get("/register", response_class=HTMLResponse)
+def read_root(request: Request):
+    return templates.TemplateResponse("register.html", {"request": request})
+
+
 @app.get("/items/{item_id}")
 def read_item(item_id: int, q: str = None):
     return {"item_id": item_id, "q": q}
@@ -41,7 +46,7 @@ def read_item(item_id: int, q: str = None):
 
 #
 #
-# USER ENDPONTS ---------------------------------------------------------------
+# USER ENDPOINTS ---------------------------------------------------------------
 
 
 class UserRegistration(BaseModel):
@@ -292,8 +297,10 @@ def streak_update(habit: dict, habit_type: str) -> None:
 
 
 @app.get("/habit")
-def get_habit(spnw_auth_token: Annotated[str | None, Header()], hid: str, habit_type: str):
-    '''gets specific habit for given user'''
+def get_habit(
+    spnw_auth_token: Annotated[str | None, Header()], hid: str, habit_type: str
+):
+    """gets specific habit for given user"""
     user_id = get_user_from_session(spnw_auth_token)
     check_uid(user_id)
 
@@ -314,13 +321,13 @@ def get_habit(spnw_auth_token: Annotated[str | None, Header()], hid: str, habit_
     return {
         "name": habit["name"],
         "streak": habit["streak"],
-        "last_done": habit.get("last_done", None)
+        "last_done": habit.get("last_done", None),
     }
 
 
 @app.get("/habits")
 def get_habits(spnw_auth_token: Annotated[str | None, Header()]):
-    '''gets all habits for given user'''
+    """gets all habits for given user"""
     user_id = get_user_from_session(spnw_auth_token)
     check_uid(user_id)
 
@@ -508,6 +515,7 @@ def one_task(cookies: Annotated[TokenCookie, Cookie()], hid: str, type: str):
 
 
 @app.get("/fe/all-tasks", response_class=HTMLResponse)
+<<<<<<< HEAD
 def all_tasks(cookies: Annotated[TokenCookie, Cookie()]):
     user_id = get_user_from_session(cookies.spnw_auth_token)
     check_uid(user_id)
@@ -532,8 +540,17 @@ def all_tasks(cookies: Annotated[TokenCookie, Cookie()]):
                 "id": id,
                 "type": typ,
             })
+=======
+def all_tasks(request: Request):
+    tasks = [
+        {"title": "German Study", "streak": "🔥 4", "done": True},
+        {"title": "Exercise", "streak": "🔥 10", "done": False},
+        {"title": "Don't open league", "streak": "0", "done": False},
+    ]
+>>>>>>> 7c76751 (added functioning login and signup pages)
     task_temp = templates.get_template("task.html")
     return "".join([task_temp.render(t) for t in tasks])
+
 
 # FE ENDPOINTS -----------------------------------------------------------------
 #
