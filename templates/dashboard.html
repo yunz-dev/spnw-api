@@ -6,21 +6,61 @@
         <title>SPNW Dashboard</title>
         <script src="https://unpkg.com/alpinejs" defer></script>
         <script src="https://unpkg.com/htmx.org"></script>
-        <link
-            href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
-            rel="stylesheet"
-        />
+        <script src="https://unpkg.com/htmx.org/dist/ext/json-enc.js"></script>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script>
+        function getAuthToken() {
+            const name = "spnw_auth_token"
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+        }
+        </script>
     </head>
-    <body class="bg-blue-600 flex flex-col items-center flex-wrap">
+    <body class="bg-blue-500 flex flex-col items-center flex-wrap">
         {% include 'navbar.html' %}
         <div class="flex content-center justify-between p-4 w-4/5">
-            <h1 class="text-white font-bold text-2xl">Tasks</h1>
-            <button type="button">🍔</button>
+            <h1 class="text-white font-bold text-2xl cursor-pointer">Tasks</h1>
+            <div
+                x-data="{ open: false }"
+                class="relative"
+            >
+                <button
+                    type="button"
+                    @click="open = !open"
+                    class="hover:bg-white hover:bg-opacity-40 rounded p-1"
+                >
+                    <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="white" class="size-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                    </svg>
+                </button>
+                <div x-cloak x-show="open" x-transition @click.outside="open = false" class="absolute top-11 right-0 flex w-full min-w-[10rem] flex-col overflow-hidden rounded-md border border-neutral-300 bg-neutral-50 py-1.5" style="display: none;">
+                    <a
+                        href="#"
+                        class="flex items-center gap-1 bg-neutral-50 px-4 py-2 text-sm text-red-400 hover:bg-neutral-900/5 hover:text-red-500"
+                        @click="open = false"
+                    >
+                        <svg class="size-5" fill="none" viewBox="0 0 24 24">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 7h14m-9 3v8m4-8v8M10 3h4a1 1 0 0 1 1 1v3H9V4a1 1 0 0 1 1-1ZM6 7h12v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V7Z"/>
+                        </svg>
+                        Delete Task
+                    </a>
+                </div>
+            </div>
         </div>
-        <hr class="w-4/5">
-        <div class="mt-6 p-5 gap-3 flex flex-col items-center flex-wrap w-4/5" hx-get="/fe/all-tasks" hx-trigger="load once" hx-swap="afterbegin">
+        <hr class="w-4/5"/>
+        <div
+            class="mt-6 p-5 gap-3 flex flex-col items-center flex-wrap w-4/5"
+                hx-get="/fe/all-tasks"
+                hx-trigger="load"
+                hx-swap="afterbegin"
+        >
             <div class="flex justify-around p-5 border-2 rounded-md w-full bg-gray-900 bg-opacity-20 text-white font-semibold text-lg border-dashed cursor-pointer">
-                <h1>+ Add Task</h1>
+                <h1 class="flex items-center gap-2">
+                    <svg class="size-6" fill="none" viewBox="0 0 24 24">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 7.757v8.486M7.757 12h8.486M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                    </svg>
+                    Add Task</h1>
             </div>
         </div>
     </body>

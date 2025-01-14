@@ -6,7 +6,7 @@ from typing import Annotated
 import bcrypt
 import pytz
 from bson.objectid import ObjectId
-from fastapi import FastAPI, Form, Header, HTTPException, Request
+from fastapi import FastAPI, Form, Header, HTTPException, Request, Cookie, Response
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, EmailStr
@@ -330,7 +330,9 @@ def get_habits(spnw_auth_token: Annotated[str | None, Header()]):
 
 @app.put("/habits")
 def update_habit(
-    spnw_auth_token: Annotated[str | None, Header()], habit_info: HabitUpdate
+    spnw_auth_token: Annotated[str | None, Header()],
+    habit_info: HabitUpdate,
+    response: Response
 ):
     """updates a habit"""
     user_id = get_user_from_session(spnw_auth_token)
@@ -368,6 +370,7 @@ def update_habit(
     # Query new changes
     habit = habits.find_one({"_id": ObjectId(habit_info.id)})
 
+    response.headers["HX-Trigger"] = habit_info.id
     return {
         "message": "Habit updated",
         "habit": {"name": habit["name"], "streak": habit["streak"]},
@@ -454,6 +457,10 @@ def delete_habit(
 #
 #
 # FE ENDPOINTS -----------------------------------------------------------------
+
+class TokenCookie(BaseModel):
+    spnw_auth_token: str
+
 @app.get("/fe/test", response_class=HTMLResponse)
 def update():
     return "<p>Hello from WORdsad!</p>"
@@ -469,11 +476,59 @@ def dashboard(request: Request):
     return templates.TemplateResponse("dashboard.html", {"request": request})
 
 
+@app.get("/fe/task", response_class=HTMLResponse)
+def one_task(cookies: Annotated[TokenCookie, Cookie()], hid: str, type: str):
+    user_id = get_user_from_session(cookies.spnw_auth_token)
+    check_uid(user_id)
+
+    users = client["users"]["users"]
+    user = users.find_one({"_id": user_id})
+
+    check_user(user)
+    check_habit_type(type)
+    check_id(hid)
+
+    habits = client["habits"][type]
+    habit = habits.find_one({"_id": ObjectId(hid)})
+    check_habit(type, habit, user)
+    streak_update(habit, type)
+    habit = habits.find_one({"_id": ObjectId(hid)})
+
+    task_temp = templates.get_template("task.html")
+    return task_temp.render({
+        "title": habit["name"],
+        "streak": habit["streak"],
+        "done": check_habit_done(habit.get("last_done")),
+        "id": hid,
+        "type": type,
+    })
+
+
 @app.get("/fe/all-tasks", response_class=HTMLResponse)
-def all_tasks(request: Request):
-    tasks = [{"title": "German Study", "streak": "🔥 4", "done": True},
-             {"title": "Exercise", "streak": "🔥 10", "done": False},
-             {"title": "Don't open league", "streak": "0", "done": False}]
+def all_tasks(cookies: Annotated[TokenCookie, Cookie()]):
+    user_id = get_user_from_session(cookies.spnw_auth_token)
+    check_uid(user_id)
+
+    users = client["users"]["users"]
+    user = users.find_one({"_id": user_id})
+    check_user(user)
+
+    user_habits = user.get("habits", {})
+    tasks = []
+    for typ, ids in user_habits.items():
+        for id in ids:
+            habit = client["habits"][typ].find_one({"_id": ObjectId(id)})
+            if not habit:
+                continue
+            streak_update(habit, typ)
+            habit = client["habits"][typ].find_one({"_id": ObjectId(id)})
+            tasks.append({
+                "title": habit["name"],
+                "streak": habit["streak"],
+                "done": check_habit_done(habit.get("last_done")),
+                "id": id,
+                "type": typ,
+            })
     task_temp = templates.get_template("task.html")
     return "".join([task_temp.render(t) for t in tasks])
 
