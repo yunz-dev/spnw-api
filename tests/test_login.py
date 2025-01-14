@@ -27,9 +27,10 @@ def test_login_normal():
     res = requests.post(f"{url}users/login", json=data)
 
     assert res.status_code == 200
-    assert res.json() == {"response": "true"}
+    assert "session_token" in res.json()
 
-    res = requests.delete(f"{url}users", json=data)
+    headers = {"spnw-auth-token": res.json()["session_token"]}
+    res = requests.delete(f"{url}users", headers=headers)
 
     assert res.status_code == 200
     assert res.json() == {"response": "true"}
@@ -75,7 +76,13 @@ def test_login_wrong_pass():
     assert res.json() == {"detail": "Permission Denied"}
 
     data = {"username": user, "password": pw}
-    res = requests.delete(f"{url}users", json=data)
+    res = requests.post(f"{url}users/login", json=data)
+
+    assert res.status_code == 200
+    assert "session_token" in res.json()
+
+    headers = {"spnw-auth-token": res.json()["session_token"]}
+    res = requests.delete(f"{url}users", headers=headers)
 
     assert res.status_code == 200
     assert res.json() == {"response": "true"}
