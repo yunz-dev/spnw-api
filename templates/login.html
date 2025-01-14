@@ -111,7 +111,7 @@
                 // localStorage.setItem("session_token", data.session_token);
               }
 
-              alert("Login successful, cookies updated!");
+              window.location.href = "../fe/dashboard";
             } catch (error) {
               console.error("Failed to parse response:", error);
             }
