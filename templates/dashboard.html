@@ -17,8 +17,9 @@
         }
         </script>
     </head>
-    <body class="bg-blue-500 flex flex-col items-center flex-wrap">
+    <body class="bg-blue-500 flex flex-col items-center flex-wrap" x-data="{ add_task: false }">
         {% include 'navbar.html' %}
+        {% include 'add-task.html' %}
         <div class="flex content-center justify-between p-4 w-4/5">
             <h1 class="text-white font-bold text-2xl cursor-pointer">Tasks</h1>
             <div
@@ -51,11 +52,11 @@
         <hr class="w-4/5"/>
         <div
             class="mt-6 p-5 gap-3 flex flex-col items-center flex-wrap w-4/5"
-                hx-get="/fe/all-tasks"
-                hx-trigger="load"
-                hx-swap="afterbegin"
+            hx-get="/fe/all-tasks"
+            hx-trigger="load"
+            hx-swap="afterbegin"
         >
-            <div class="flex justify-around p-5 border-2 rounded-md w-full bg-gray-900 bg-opacity-20 text-white font-semibold text-lg border-dashed cursor-pointer">
+            <div id="add-task-button" class="flex justify-around p-5 border-2 rounded-md w-full bg-gray-900 bg-opacity-20 text-white font-semibold text-lg border-dashed cursor-pointer" @click="add_task = true">
                 <h1 class="flex items-center gap-2">
                     <svg class="size-6" fill="none" viewBox="0 0 24 24">
                         <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 7.757v8.486M7.757 12h8.486M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
