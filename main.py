@@ -428,8 +428,8 @@ def add_habits(spnw_auth_token: Annotated[str | None, Header()], habit_info: Hab
     )
 
     if Accept == "text/html":
-        task_temp = templates.get_template("task.html")
-        html = task_temp.render({
+        habit_temp = templates.get_template("habit.html")
+        html = habit_temp.render({
             "title": habit_info.name,
             "streak": 0,
             "done": False,
@@ -506,8 +506,8 @@ def dashboard(request: Request):
     return templates.TemplateResponse("dashboard.html", {"request": request})
 
 
-@app.get("/fe/task", response_class=HTMLResponse)
-def one_task(cookies: Annotated[TokenCookie, Cookie()], hid: str, type: str):
+@app.get("/fe/habit", response_class=HTMLResponse)
+def one_habit(cookies: Annotated[TokenCookie, Cookie()], hid: str, type: str):
     user_id = get_user_from_session(cookies.session_token)
     check_uid(user_id)
 
@@ -524,8 +524,8 @@ def one_task(cookies: Annotated[TokenCookie, Cookie()], hid: str, type: str):
     streak_update(habit, type)
     habit = habits.find_one({"_id": ObjectId(hid)})
 
-    task_temp = templates.get_template("task.html")
-    return task_temp.render(
+    habit_temp = templates.get_template("habit.html")
+    return habit_temp.render(
         {
             "title": habit["name"],
             "streak": habit["streak"],
@@ -536,8 +536,8 @@ def one_task(cookies: Annotated[TokenCookie, Cookie()], hid: str, type: str):
     )
 
 
-@app.get("/fe/all-tasks", response_class=HTMLResponse)
-def all_tasks(cookies: Annotated[TokenCookie, Cookie()]):
+@app.get("/fe/all-habits", response_class=HTMLResponse)
+def all_habits(cookies: Annotated[TokenCookie, Cookie()]):
     user_id = get_user_from_session(cookies.session_token)
     check_uid(user_id)
 
@@ -546,7 +546,7 @@ def all_tasks(cookies: Annotated[TokenCookie, Cookie()]):
     check_user(user)
 
     user_habits = user.get("habits", {})
-    tasks = []
+    habits = []
     for typ, ids in user_habits.items():
         for id in ids:
             habit = client["habits"][typ].find_one({"_id": ObjectId(id)})
@@ -554,7 +554,7 @@ def all_tasks(cookies: Annotated[TokenCookie, Cookie()]):
                 continue
             streak_update(habit, typ)
             habit = client["habits"][typ].find_one({"_id": ObjectId(id)})
-            tasks.append(
+            habits.append(
                 {
                     "title": habit["name"],
                     "streak": habit["streak"],
@@ -563,8 +563,8 @@ def all_tasks(cookies: Annotated[TokenCookie, Cookie()]):
                     "type": typ,
                 }
             )
-    task_temp = templates.get_template("task.html")
-    return "".join([task_temp.render(t) for t in tasks])
+    habit_temp = templates.get_template("habit.html")
+    return "".join([habit_temp.render(t) for t in habits])
 
 
 # FE ENDPOINTS -----------------------------------------------------------------
