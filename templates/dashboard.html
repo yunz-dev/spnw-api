@@ -17,7 +17,7 @@
         }
         </script>
     </head>
-    <body class="bg-blue-500 flex flex-col items-center flex-wrap" x-data="{ add_habit: false }">
+    <body class="bg-blue-500 flex flex-col items-center flex-wrap" x-data="{ add_habit: false, delete_habit: false }">
         {% include 'navbar.html' %}
         {% include 'add-habit.html' %}
         <div class="flex content-center justify-between p-4 w-4/5">
@@ -39,7 +39,7 @@
                     <a
                         href="#"
                         class="flex items-center gap-1 bg-neutral-50 px-4 py-2 text-sm text-red-400 hover:bg-neutral-900/5 hover:text-red-500"
-                        @click="open = false"
+                        @click="open = false, delete_habit = !delete_habit"
                     >
                         <svg class="size-5" fill="none" viewBox="0 0 24 24">
                             <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 7h14m-9 3v8m4-8v8M10 3h4a1 1 0 0 1 1 1v3H9V4a1 1 0 0 1 1-1ZM6 7h12v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V7Z"/>
@@ -56,12 +56,31 @@
             hx-trigger="load"
             hx-swap="afterbegin"
         >
-            <div id="add-habit-button" class="flex justify-around p-5 border-2 rounded-md w-full bg-gray-900 bg-opacity-20 text-white font-semibold text-lg border-dashed cursor-pointer" @click="add_habit = true">
+            <div
+                id="add-habit-button"
+                class="flex justify-around p-5 border-2 rounded-md w-full bg-gray-900 bg-opacity-20 text-white font-semibold text-lg border-dashed cursor-pointer"
+                @click="add_habit = true"
+                x-show="!delete_habit"
+            >
                 <h1 class="flex items-center gap-2">
                     <svg class="size-6" fill="none" viewBox="0 0 24 24">
                         <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 7.757v8.486M7.757 12h8.486M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
                     </svg>
-                    Add Habit</h1>
+                    Add Habit
+                </h1>
+            </div>
+            <div
+                class="flex justify-around p-5 border-2 rounded-md w-full bg-gray-900 bg-opacity-20 text-white font-semibold text-lg border-dashed cursor-pointer"
+                @click="delete_habit = false"
+                x-show="delete_habit"
+                style="display: none;"
+            >
+                <h1 class="flex items-center gap-2">
+                    <svg class="size-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                        <path fill-rule="evenodd" d="M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm11-4a1 1 0 1 0-2 0v5a1 1 0 1 0 2 0V8Zm-1 7a1 1 0 1 0 0 2h.01a1 1 0 1 0 0-2H12Z" clip-rule="evenodd"/>
+                    </svg>
+                    Cancel
+                </h1>
             </div>
         </div>
     </body>
