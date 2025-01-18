@@ -9,6 +9,7 @@ from bson.objectid import ObjectId
 from fastapi import Cookie, FastAPI, Form, Header, HTTPException, Request, Response
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, EmailStr
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
@@ -21,6 +22,7 @@ class TokenCookie(BaseModel):
 app = FastAPI()
 client = MongoClient(getenv("MONGO_URI"), server_api=ServerApi("1"))
 templates = Jinja2Templates(directory="templates")
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 try:
     client.admin.command("ping")
