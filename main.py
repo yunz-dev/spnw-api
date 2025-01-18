@@ -6,12 +6,17 @@ from typing import Annotated
 import bcrypt
 import pytz
 from bson.objectid import ObjectId
-from fastapi import FastAPI, Form, Header, HTTPException, Request
-from fastapi.responses import HTMLResponse
+from fastapi import Cookie, FastAPI, Form, Header, HTTPException, Request, Response
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, EmailStr
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
+
+
+class TokenCookie(BaseModel):
+    session_token: str
+
 
 app = FastAPI()
 client = MongoClient(getenv("MONGO_URI"), server_api=ServerApi("1"))
@@ -25,13 +30,25 @@ except Exception as e:
 
 
 @app.get("/", response_class=HTMLResponse)
+# def read_root(request: Request, cookies: Annotated[TokenCookie, Cookie()] = None):
 def read_root(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+    cookie_token = request.cookies.get("session_token", None)
+    if cookie_token is None:
+        return RedirectResponse(url="/login", status_code=302)
+    if get_user_from_session(cookie_token) is None:
+        return RedirectResponse(url="/login", status_code=302)
+    else:
+        return RedirectResponse(url="fe/dashboard", status_code=302)
 
 
 @app.get("/login", response_class=HTMLResponse)
-def read_root(request: Request):
+def api_login(request: Request):
     return templates.TemplateResponse("login.html", {"request": request})
+
+
+@app.get("/register", response_class=HTMLResponse)
+def api_register(request: Request):
+    return templates.TemplateResponse("register.html", {"request": request})
 
 
 @app.get("/items/{item_id}")
@@ -41,7 +58,7 @@ def read_item(item_id: int, q: str = None):
 
 #
 #
-# USER ENDPONTS ---------------------------------------------------------------
+# USER ENDPOINTS ---------------------------------------------------------------
 
 
 class UserRegistration(BaseModel):
@@ -67,7 +84,7 @@ def create_session(uid: str) -> str:
 
 
 def get_user_from_session(token: str) -> str | None:
-    return sessions.get(token)
+    return sessions.get(token, None)
 
 
 def remove_from_session(token: str):
@@ -177,11 +194,13 @@ def login(user: UserLogin):
 
 
 @app.post("/users/logout")
-def logout(spnw_auth_token: Annotated[str | None, Header()]):
-    token = spnw_auth_token
-    uid = sessions.get(token, None)
+def logout(request: Request):
+    cookie_token = request.cookies.get("session_token", None)
+    if cookie_token is None:
+        return RedirectResponse(url="/login", status_code=302)
+    uid = sessions.get(cookie_token, None)
     if uid:
-        sessions.pop(token)
+        sessions.pop(cookie_token)
         return {"response": "true"}
     else:
         raise HTTPException(status_code=401, detail="Bad Token")
@@ -292,8 +311,10 @@ def streak_update(habit: dict, habit_type: str) -> None:
 
 
 @app.get("/habit")
-def get_habit(spnw_auth_token: Annotated[str | None, Header()], hid: str, habit_type: str):
-    '''gets specific habit for given user'''
+def get_habit(
+    spnw_auth_token: Annotated[str | None, Header()], hid: str, habit_type: str
+):
+    """gets specific habit for given user"""
     user_id = get_user_from_session(spnw_auth_token)
     check_uid(user_id)
 
@@ -308,16 +329,19 @@ def get_habit(spnw_auth_token: Annotated[str | None, Header()], hid: str, habit_
     habit = habits.find_one({"_id": ObjectId(hid)})
     check_habit(habit_type, habit, user)
 
+    streak_update(habit, habit_type)
+    habit = client["habits"][habit_type].find_one({"_id": ObjectId(hid)})
+
     return {
         "name": habit["name"],
         "streak": habit["streak"],
-        "last_done": habit.get("last_done", None)
+        "last_done": habit.get("last_done", None),
     }
 
 
 @app.get("/habits")
 def get_habits(spnw_auth_token: Annotated[str | None, Header()]):
-    '''gets all habits for given user'''
+    """gets all habits for given user"""
     user_id = get_user_from_session(spnw_auth_token)
     check_uid(user_id)
 
@@ -330,7 +354,9 @@ def get_habits(spnw_auth_token: Annotated[str | None, Header()]):
 
 @app.put("/habits")
 def update_habit(
-    spnw_auth_token: Annotated[str | None, Header()], habit_info: HabitUpdate
+    spnw_auth_token: Annotated[str | None, Header()],
+    habit_info: HabitUpdate,
+    response: Response,
 ):
     """updates a habit"""
     user_id = get_user_from_session(spnw_auth_token)
@@ -368,6 +394,7 @@ def update_habit(
     # Query new changes
     habit = habits.find_one({"_id": ObjectId(habit_info.id)})
 
+    response.headers["HX-Trigger"] = habit_info.id
     return {
         "message": "Habit updated",
         "habit": {"name": habit["name"], "streak": habit["streak"]},
@@ -375,7 +402,11 @@ def update_habit(
 
 
 @app.post("/habits")
-def add_habits(spnw_auth_token: Annotated[str | None, Header()], habit_info: HabitAdd):
+def add_habits(
+    spnw_auth_token: Annotated[str | None, Header()],
+    habit_info: HabitAdd,
+    Accept: Annotated[str | None, Header()] = None,
+):
     """adds a habit"""
     user_id = get_user_from_session(spnw_auth_token)
     check_uid(user_id)
@@ -402,6 +433,18 @@ def add_habits(spnw_auth_token: Annotated[str | None, Header()], habit_info: Hab
         },
     )
 
+    if Accept == "text/html":
+        habit_temp = templates.get_template("habit.html")
+        html = habit_temp.render(
+            {
+                "title": habit_info.name,
+                "streak": 0,
+                "done": False,
+                "id": str(result.inserted_id),
+                "type": habit_info.type,
+            }
+        )
+        return HTMLResponse(content=html, status_code=200)
     # Returns 200
     return {
         "message": "Habit added",
@@ -454,6 +497,8 @@ def delete_habit(
 #
 #
 # FE ENDPOINTS -----------------------------------------------------------------
+
+
 @app.get("/fe/test", response_class=HTMLResponse)
 def update():
     return "<p>Hello from WORdsad!</p>"
@@ -466,16 +511,75 @@ def submit(data: str = Form(...)):
 
 @app.get("/fe/dashboard", response_class=HTMLResponse)
 def dashboard(request: Request):
-    return templates.TemplateResponse("dashboard.html", {"request": request})
+    cookie_token = request.cookies.get("session_token", None)
+    if cookie_token is None:
+        return RedirectResponse(url="/login", status_code=302)
+    if get_user_from_session(cookie_token) is None:
+        return RedirectResponse(url="/login", status_code=302)
+    else:
+        return templates.TemplateResponse("dashboard.html", {"request": request})
 
 
-@app.get("/fe/all-tasks", response_class=HTMLResponse)
-def all_tasks(request: Request):
-    tasks = [{"title": "German Study", "streak": "🔥 4", "done": True},
-             {"title": "Exercise", "streak": "🔥 10", "done": False},
-             {"title": "Don't open league", "streak": "0", "done": False}]
-    task_temp = templates.get_template("task.html")
-    return "".join([task_temp.render(t) for t in tasks])
+@app.get("/fe/habit", response_class=HTMLResponse)
+def one_habit(cookies: Annotated[TokenCookie, Cookie()], hid: str, type: str):
+    user_id = get_user_from_session(cookies.session_token)
+    check_uid(user_id)
+
+    users = client["users"]["users"]
+    user = users.find_one({"_id": user_id})
+
+    check_user(user)
+    check_habit_type(type)
+    check_id(hid)
+
+    habits = client["habits"][type]
+    habit = habits.find_one({"_id": ObjectId(hid)})
+    check_habit(type, habit, user)
+    streak_update(habit, type)
+    habit = habits.find_one({"_id": ObjectId(hid)})
+
+    habit_temp = templates.get_template("habit.html")
+    return habit_temp.render(
+        {
+            "title": habit["name"],
+            "streak": habit["streak"],
+            "done": check_habit_done(habit.get("last_done")),
+            "id": hid,
+            "type": type,
+        }
+    )
+
+
+@app.get("/fe/all-habits", response_class=HTMLResponse)
+def all_habits(cookies: Annotated[TokenCookie, Cookie()]):
+    user_id = get_user_from_session(cookies.session_token)
+    check_uid(user_id)
+
+    users = client["users"]["users"]
+    user = users.find_one({"_id": user_id})
+    check_user(user)
+
+    user_habits = user.get("habits", {})
+    habits = []
+    for typ, ids in user_habits.items():
+        for id in ids:
+            habit = client["habits"][typ].find_one({"_id": ObjectId(id)})
+            if not habit:
+                continue
+            streak_update(habit, typ)
+            habit = client["habits"][typ].find_one({"_id": ObjectId(id)})
+            habits.append(
+                {
+                    "title": habit["name"],
+                    "streak": habit["streak"],
+                    "done": check_habit_done(habit.get("last_done")),
+                    "id": id,
+                    "type": typ,
+                }
+            )
+    habit_temp = templates.get_template("habit.html")
+    return "".join([habit_temp.render(t) for t in habits])
+
 
 # FE ENDPOINTS -----------------------------------------------------------------
 #

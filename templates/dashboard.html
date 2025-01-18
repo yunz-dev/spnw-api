@@ -6,21 +6,81 @@
         <title>SPNW Dashboard</title>
         <script src="https://unpkg.com/alpinejs" defer></script>
         <script src="https://unpkg.com/htmx.org"></script>
-        <link
-            href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
-            rel="stylesheet"
-        />
+        <script src="https://unpkg.com/htmx.org/dist/ext/json-enc.js"></script>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script>
+        function getAuthToken() {
+            const name = "session_token"
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+        }
+        </script>
     </head>
-    <body class="bg-blue-600 flex flex-col items-center flex-wrap">
+    <body class="bg-blue-500 flex flex-col items-center flex-wrap" x-data="{ add_habit: false, delete_habit: false }">
         {% include 'navbar.html' %}
+        {% include 'add-habit.html' %}
         <div class="flex content-center justify-between p-4 w-4/5">
-            <h1 class="text-white font-bold text-2xl">Tasks</h1>
-            <button type="button">🍔</button>
+            <h1 class="text-white font-bold text-2xl cursor-pointer">Habits</h1>
+            <div
+                x-data="{ open: false }"
+                class="relative"
+            >
+                <button
+                    type="button"
+                    @click="open = !open"
+                    class="hover:bg-white hover:bg-opacity-40 rounded p-1"
+                >
+                    <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="white" class="size-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                    </svg>
+                </button>
+                <div x-cloak x-show="open" x-transition @click.outside="open = false" class="absolute top-11 right-0 flex w-full min-w-[10rem] flex-col overflow-hidden rounded-md border border-neutral-300 bg-neutral-50 py-1.5" style="display: none;">
+                    <a
+                        href="#"
+                        class="flex items-center gap-1 bg-neutral-50 px-4 py-2 text-sm text-red-400 hover:bg-neutral-900/5 hover:text-red-500"
+                        @click="open = false, delete_habit = !delete_habit"
+                    >
+                        <svg class="size-5" fill="none" viewBox="0 0 24 24">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 7h14m-9 3v8m4-8v8M10 3h4a1 1 0 0 1 1 1v3H9V4a1 1 0 0 1 1-1ZM6 7h12v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V7Z"/>
+                        </svg>
+                        Delete Habit
+                    </a>
+                </div>
+            </div>
         </div>
-        <hr class="w-4/5">
-        <div class="mt-6 p-5 gap-3 flex flex-col items-center flex-wrap w-4/5" hx-get="/fe/all-tasks" hx-trigger="load once" hx-swap="afterbegin">
-            <div class="flex justify-around p-5 border-2 rounded-md w-full bg-gray-900 bg-opacity-20 text-white font-semibold text-lg border-dashed cursor-pointer">
-                <h1>+ Add Task</h1>
+        <hr class="w-4/5"/>
+        <div
+            class="mt-6 p-5 gap-3 flex flex-col items-center flex-wrap w-4/5"
+            hx-get="/fe/all-habits"
+            hx-trigger="load"
+            hx-swap="afterbegin"
+        >
+            <div
+                id="add-habit-button"
+                class="flex justify-around p-5 border-2 rounded-md w-full bg-gray-900 bg-opacity-20 text-white font-semibold text-lg border-dashed cursor-pointer"
+                @click="add_habit = true"
+                x-show="!delete_habit"
+            >
+                <h1 class="flex items-center gap-2">
+                    <svg class="size-6" fill="none" viewBox="0 0 24 24">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 7.757v8.486M7.757 12h8.486M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                    </svg>
+                    Add Habit
+                </h1>
+            </div>
+            <div
+                class="flex justify-around p-5 border-2 rounded-md w-full bg-gray-900 bg-opacity-20 text-white font-semibold text-lg border-dashed cursor-pointer"
+                @click="delete_habit = false"
+                x-show="delete_habit"
+                style="display: none;"
+            >
+                <h1 class="flex items-center gap-2">
+                    <svg class="size-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                        <path fill-rule="evenodd" d="M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm11-4a1 1 0 1 0-2 0v5a1 1 0 1 0 2 0V8Zm-1 7a1 1 0 1 0 0 2h.01a1 1 0 1 0 0-2H12Z" clip-rule="evenodd"/>
+                    </svg>
+                    Cancel
+                </h1>
             </div>
         </div>
     </body>
