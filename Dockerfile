@@ -14,6 +14,8 @@ RUN apt-get update && apt-get install -y curl sudo && \
     rm cloudflared.deb && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
+RUN echo $TUNNEL_TOKEN
+
 RUN cloudflared service install "$TUNNEL_TOKEN"
 
 COPY . /
