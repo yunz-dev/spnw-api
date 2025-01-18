@@ -511,7 +511,13 @@ def submit(data: str = Form(...)):
 
 @app.get("/fe/dashboard", response_class=HTMLResponse)
 def dashboard(request: Request):
-    return templates.TemplateResponse("dashboard.html", {"request": request})
+    cookie_token = request.cookies.get("session_token", None)
+    if cookie_token is None:
+        return RedirectResponse(url="/login", status_code=302)
+    if get_user_from_session(cookie_token) is None:
+        return RedirectResponse(url="/login", status_code=302)
+    else:
+        return templates.TemplateResponse("dashboard.html", {"request": request})
 
 
 @app.get("/fe/habit", response_class=HTMLResponse)
