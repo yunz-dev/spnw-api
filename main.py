@@ -194,11 +194,13 @@ def login(user: UserLogin):
 
 
 @app.post("/users/logout")
-def logout(spnw_auth_token: Annotated[str | None, Header()]):
-    token = spnw_auth_token
-    uid = sessions.get(token, None)
+def logout(request: Request):
+    cookie_token = request.cookies.get("session_token", None)
+    if cookie_token is None:
+        return RedirectResponse(url="/login", status_code=302)
+    uid = sessions.get(cookie_token, None)
     if uid:
-        sessions.pop(token)
+        sessions.pop(cookie_token)
         return {"response": "true"}
     else:
         raise HTTPException(status_code=401, detail="Bad Token")
@@ -400,7 +402,11 @@ def update_habit(
 
 
 @app.post("/habits")
-def add_habits(spnw_auth_token: Annotated[str | None, Header()], habit_info: HabitAdd, Accept: Annotated[str | None, Header()] = None):
+def add_habits(
+    spnw_auth_token: Annotated[str | None, Header()],
+    habit_info: HabitAdd,
+    Accept: Annotated[str | None, Header()] = None,
+):
     """adds a habit"""
     user_id = get_user_from_session(spnw_auth_token)
     check_uid(user_id)
@@ -429,13 +435,15 @@ def add_habits(spnw_auth_token: Annotated[str | None, Header()], habit_info: Hab
 
     if Accept == "text/html":
         habit_temp = templates.get_template("habit.html")
-        html = habit_temp.render({
-            "title": habit_info.name,
-            "streak": 0,
-            "done": False,
-            "id": str(result.inserted_id),
-            "type": habit_info.type
-        })
+        html = habit_temp.render(
+            {
+                "title": habit_info.name,
+                "streak": 0,
+                "done": False,
+                "id": str(result.inserted_id),
+                "type": habit_info.type,
+            }
+        )
         return HTMLResponse(content=html, status_code=200)
     # Returns 200
     return {
