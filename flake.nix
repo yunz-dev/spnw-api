@@ -15,6 +15,7 @@
           buildInputs = [
             pkgs.python3
             pkgs.python312Packages.pip
+            pkgs.tailwindcss
           ];
 
           shellHook = ''
