@@ -1,6 +1,5 @@
 FROM python:latest
 #todo: change to NIX
-ENV TUNNEL_TOKEN=$TUNNEL_TOKEN
 
 WORKDIR /
 
