@@ -8,6 +8,9 @@ COPY requirements.txt /
 
 RUN pip install --no-cache-dir -r requirements.txt
 
+COPY start.sh /usr/local/bin/start.sh
+RUN chmod +x /usr/local/bin/start.sh
+
 RUN apt-get update && apt-get install -y curl sudo && \
     curl -L --output cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb && \
     dpkg -i cloudflared.deb && \
@@ -20,4 +23,7 @@ EXPOSE 5555
 
 #run server
 # TODO: change port to variable
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "5555"]
+
+# Use the script as the CMD
+CMD ["/usr/local/bin/start.sh"]
+# CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "5555"]
