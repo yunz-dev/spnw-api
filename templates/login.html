@@ -108,7 +108,10 @@
 
               // Update cookies with response data (e.g., accessToken and username)
               if (data.session_token) {
-                document.cookie = "session_token=" + data.session_token;
+                let date = new Date();
+                date.setTime(date.getTime() + (30 * 24 * 60 * 60 * 1000));
+                document.cookie = "session_token=" + data.session_token + "; "
+                                  + "expires=" + date.toUTCString() + ";";
                 // localStorage.setItem("session_token", data.session_token);
               }
 
