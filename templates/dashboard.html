@@ -52,10 +52,17 @@
         <hr class="w-4/5"/>
         <div
             class="mt-6 p-5 gap-3 flex flex-col items-center flex-wrap w-4/5"
-            hx-get="/fe/all-habits"
-            hx-trigger="load"
-            hx-swap="afterbegin"
         >
+            {% for habit in habits %}
+                {% with %}
+                    {% set title = habit.title %}
+                    {% set streak = habit.streak %}
+                    {% set done = habit.done %}
+                    {% set id = habit.id %}
+                    {% set type = habit.type %}
+                    {% include 'habit.html' %}
+                {% endwith %}
+            {% endfor %}
             <div
                 id="add-habit-button"
                 class="flex justify-around p-5 border-2 rounded-md w-full bg-gray-900 bg-opacity-20 text-white font-semibold text-lg border-dashed cursor-pointer"
