@@ -8,39 +8,40 @@
         class="absolute -z-[1] top-0 right-0 bottom-0 left-0"
     ></div>
     <div
-        class="bg-blue-300 flex flex-col p-5 rounded-lg">
+        class="bg-blue-400 flex flex-col p-7 rounded-lg">
         <form
             hx-post="/habits"
             hx-target="#add-habit-button"
             hx-ext="json-enc"
             hx-swap="beforebegin"
             hx-headers='js:{"spnw-auth-token": getAuthToken(), "Accept": "text/html"}'
-            class="flex flex-col gap-5"
+            class="flex flex-col gap-5 items-center"
         >
-            <div>
-                <label>Name</label>
-                <input name="name" type="text" placeholder="habit name" value="" class="bg-gray-200"/>
+            <h1 class="text-white text-xl font-bold">Add habit</h1>
+            <div class="flex w-full max-w-xs flex-col gap-1 text-on-surface dark:text-on-surface-dark">
+                <input id="name" type="text" class="w-full rounded border border-outline bg-surface-alt px-2 py-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-75 dark:border-outline-dark dark:bg-surface-dark-alt/50 dark:focus-visible:outline-primary-dark" name="name" placeholder="Habit Name"/>
             </div>
-
-            <div class="flex flex-row gap-2">
-                <label>Type</label>
-                <!-- TODO: switch with htmx request to query all types -->
-                <select name="type">
+            <div class="relative flex w-full max-w-xs flex-col gap-1 text-on-surface dark:text-on-surface-dark">
+                <label for="type" class="w-fit pl-0.5 text-sm text-white">Habit Type</label>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="absolute pointer-events-none right-4 top-8 size-5">
+                    <path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
+                </svg>
+                <select id="type" name="type" class="w-full appearance-none rounded border border-outline bg-surface-alt px-4 py-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-75 dark:border-outline-dark dark:bg-surface-dark-alt/50 dark:focus-visible:outline-primary-dark">
                     <option value="custom">custom</option>
                 </select>
             </div>
 
-            <div class="flex flex-row items-center justify-between">
+            <div class="flex flex-row items-center justify-between w-full">
                 <button
                     type="button"
-                    class="cursor-pointer whitespace-nowrap rounded-md bg-black px-4 py-2 text-sm font-medium tracking-wide text-neutral-100 transition hover:opacity-75 text-center focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black active:opacity-100 active:outline-offset-0 disabled:opacity-75 disabled:cursor-not-allowed dark:bg-white dark:text-black dark:focus-visible:outline-white"
+                    class="cursor-pointer whitespace-nowrap rounded-md bg-white px-4 py-2 text-sm font-medium transition hover:opacity-75 text-center"
                     @click="add_habit = false"
                 >
                     Cancel
                 </button>
                 <button
                     type="submit"
-                    class="cursor-pointer whitespace-nowrap rounded-md bg-sky-500 px-4 py-2 text-sm font-medium tracking-wide text-white transition hover:opacity-75 text-center focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 active:opacity-100 active:outline-offset-0 disabled:opacity-75 disabled:cursor-not-allowed dark:bg-sky-500 dark:text-white dark:focus-visible:outline-sky-500"
+                    class="cursor-pointer whitespace-nowrap rounded-md bg-blue-500 px-4 py-2 text-sm font-medium tracking-wide text-white transition hover:opacity-75 text-center focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 active:opacity-100 active:outline-offset-0 disabled:opacity-75 disabled:cursor-not-allowed "
                     @click="add_habit = false"
                 >
                     Add
