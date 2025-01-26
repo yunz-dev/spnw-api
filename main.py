@@ -512,14 +512,37 @@ def submit(data: str = Form(...)):
 
 
 @app.get("/fe/dashboard", response_class=HTMLResponse)
-def dashboard(request: Request):
+def dashboard(request: Request, cookies: Annotated[TokenCookie, Cookie()]):
     cookie_token = request.cookies.get("session_token", None)
+    user_id = get_user_from_session(cookies.session_token)
     if cookie_token is None:
         return RedirectResponse(url="/login", status_code=302)
-    if get_user_from_session(cookie_token) is None:
+    if user_id is None:
         return RedirectResponse(url="/login", status_code=302)
-    else:
-        return templates.TemplateResponse("dashboard.html", {"request": request})
+
+    user = client["users"]["users"].find_one({"_id": user_id})
+    if not user:
+        return RedirectResponse(url="/login", status_code=302)
+
+    user_habits = user.get("habits", {})
+    habits = []
+    for typ, ids in user_habits.items():
+        for id in ids:
+            habit = client["habits"][typ].find_one({"_id": ObjectId(id)})
+            if not habit:
+                continue
+            streak_update(habit, typ)
+            habit = client["habits"][typ].find_one({"_id": ObjectId(id)})
+            habits.append(
+                {
+                    "title": habit["name"],
+                    "streak": habit["streak"],
+                    "done": check_habit_done(habit.get("last_done")),
+                    "id": id,
+                    "type": typ,
+                }
+            )
+    return templates.TemplateResponse("dashboard.html", {"request": request, "habits": habits})
 
 
 @app.get("/fe/habit", response_class=HTMLResponse)
@@ -550,37 +573,6 @@ def one_habit(cookies: Annotated[TokenCookie, Cookie()], hid: str, type: str):
             "type": type,
         }
     )
-
-
-@app.get("/fe/all-habits", response_class=HTMLResponse)
-def all_habits(cookies: Annotated[TokenCookie, Cookie()]):
-    user_id = get_user_from_session(cookies.session_token)
-    check_uid(user_id)
-
-    users = client["users"]["users"]
-    user = users.find_one({"_id": user_id})
-    check_user(user)
-
-    user_habits = user.get("habits", {})
-    habits = []
-    for typ, ids in user_habits.items():
-        for id in ids:
-            habit = client["habits"][typ].find_one({"_id": ObjectId(id)})
-            if not habit:
-                continue
-            streak_update(habit, typ)
-            habit = client["habits"][typ].find_one({"_id": ObjectId(id)})
-            habits.append(
-                {
-                    "title": habit["name"],
-                    "streak": habit["streak"],
-                    "done": check_habit_done(habit.get("last_done")),
-                    "id": id,
-                    "type": typ,
-                }
-            )
-    habit_temp = templates.get_template("habit.html")
-    return "".join([habit_temp.render(t) for t in habits])
 
 
 # FE ENDPOINTS -----------------------------------------------------------------
