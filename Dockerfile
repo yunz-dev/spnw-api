@@ -21,7 +21,7 @@ RUN apt-get update && apt-get install -y curl sudo && \
     rm cloudflared.deb && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-COPY --from=tailwind-builder /app/static/css/output.css ./static/css/output.css
+COPY --from=tailwind-builder /app/static/css/output.css ./static/css/tailwind.css
 
 COPY . /
 
