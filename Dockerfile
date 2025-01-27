@@ -7,7 +7,7 @@ COPY templates/ ./
 # COPY static/css ./static/css/
 
 RUN npm install tailwindcss @tailwindcss/cli
-RUN npx @tailwindcss/cli -o ./static/css/tailwind.css
+RUN npx @tailwindcss/cli -o ./static/css/tailwind.css --config ./tailwind.config.js
 
 FROM python:3.11-slim AS python-app
 
