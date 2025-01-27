@@ -6,7 +6,7 @@ COPY tailwind.config.js ./
 # COPY static/css ./static/css/
 
 RUN npm install tailwindcss @tailwindcss/cli
-RUN npx @tailwindcss/cli -o ./static/css/output.css --minify
+RUN npx @tailwindcss/cli -o ./static/css/tailwind.css --minify
 
 FROM python:3.11-slim AS python-app
 
@@ -21,7 +21,7 @@ RUN apt-get update && apt-get install -y curl sudo && \
     rm cloudflared.deb && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-COPY --from=tailwind-builder /app/static/css/output.css ./static/css/tailwind.css
+COPY --from=tailwind-builder /app/static/css/tailwind.css ./static/css/tailwind.css
 
 COPY . /
 
