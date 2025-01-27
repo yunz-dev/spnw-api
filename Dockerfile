@@ -1,15 +1,19 @@
-FROM python:latest
-#todo: change to NIX
+FROM node:18-alpine AS tailwind-builder
+
+WORKDIR /app
+
+COPY tailwind.config.js ./
+COPY static/css ./static/css/
+
+RUN npm install tailwindcss
+RUN npx tailwindcss -o ./static/css/output.css --minify
+
+FROM python:3.11-slim AS python-app
 
 WORKDIR /
 
-#install python libraries
 COPY requirements.txt /
-
 RUN pip install --no-cache-dir -r requirements.txt
-
-COPY start.sh /usr/local/bin/start.sh
-RUN chmod +x /usr/local/bin/start.sh
 
 RUN apt-get update && apt-get install -y curl sudo && \
     curl -L --output cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb && \
@@ -17,13 +21,13 @@ RUN apt-get update && apt-get install -y curl sudo && \
     rm cloudflared.deb && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
+COPY --from=tailwind-builder /app/static/css/output.css ./static/css/output.css
+
 COPY . /
+
+COPY start.sh /usr/local/bin/start.sh
+RUN chmod +x /usr/local/bin/start.sh
 
 EXPOSE 5555
 
-#run server
-# TODO: change port to variable
-
-# Use the script as the CMD
 CMD ["/usr/local/bin/start.sh"]
-# CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "5555"]
