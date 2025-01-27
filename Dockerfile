@@ -3,6 +3,7 @@ FROM node:18-alpine AS tailwind-builder
 WORKDIR /app
 
 COPY tailwind.config.js ./
+COPY ./* ./*
 # COPY static/css ./static/css/
 
 RUN npm install tailwindcss @tailwindcss/cli
