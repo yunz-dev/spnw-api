@@ -4,10 +4,11 @@ WORKDIR /app
 
 COPY tailwind.config.js ./
 COPY templates/ ./
+COPY package*.json ./
 # COPY static/css ./static/css/
 
 RUN npm install tailwindcss @tailwindcss/cli
-RUN npx @tailwindcss/cli -o ./static/css/tailwind.css --config ./tailwind.config.js
+RUN npm run build
 
 FROM python:3.11-slim AS python-app
 

@@ -1,0 +1,15 @@
+{
+  "name": "SPNW",
+  "version": "1.0.0",
+  "description": "habit tracker",
+  "main": "index.js",
+  "scripts": {
+    "watch": "tailwindcss -i ./input.css -o ./css/style.css --watch",
+    "build": "tailwindcss -o ./static/css/tailwind.css"
+  },
+  "author": "yunz-dev",
+  "license": "MIT",
+  "devDependencies": {
+    "tailwindcss": "^3.4.14"
+  }
+}
