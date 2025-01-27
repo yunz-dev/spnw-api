@@ -6,7 +6,7 @@ COPY tailwind.config.js ./
 # COPY static/css ./static/css/
 
 RUN npm install tailwindcss @tailwindcss/cli
-RUN npx @tailwindcsscli -o ./static/css/output.css --minify
+RUN npx @tailwindcss/cli -o ./static/css/output.css --minify
 
 FROM python:3.11-slim AS python-app
 
