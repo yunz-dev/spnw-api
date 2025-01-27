@@ -20,7 +20,7 @@
     <body class="bg-blue-500 flex flex-col items-center flex-wrap" x-data="{ add_habit: false, delete_habit: false }">
         {% include 'navbar.html' %}
         {% include 'add-habit.html' %}
-        <div class="flex content-center justify-between p-4 w-4/5">
+        <div class="flex content-center justify-between p-4 w-11/12 sm:w-4/5">
             <h1 class="text-white font-bold text-2xl cursor-pointer">Habits</h1>
             <div
                 x-data="{ open: false }"
@@ -49,9 +49,9 @@
                 </div>
             </div>
         </div>
-        <hr class="w-4/5"/>
+        <hr class="w-11/12 sm:w-4/5"/>
         <div
-            class="mt-6 p-5 gap-3 flex flex-col items-center flex-wrap w-4/5"
+            class="mt-6 p-5 gap-3 flex flex-col items-center flex-wrap w-11/12 sm:w-4/5"
         >
             {% for habit in habits %}
                 {% with %}
