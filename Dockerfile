@@ -3,7 +3,7 @@ FROM node:18-alpine AS tailwind-builder
 WORKDIR /app
 
 COPY tailwind.config.js ./
-COPY static/css ./static/css/
+# COPY static/css ./static/css/
 
 RUN npm install tailwindcss
 RUN npx tailwindcss -o ./static/css/output.css --minify
