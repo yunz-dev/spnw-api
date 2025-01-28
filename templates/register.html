@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
+    <title>Sign Up | SPNW</title>
     <script src="https://unpkg.com/alpinejs" defer></script>
     <script src="https://unpkg.com/htmx.org"></script>
     <script src="https://unpkg.com/htmx.org@1.9.12/dist/ext/json-enc.js"></script>
@@ -12,15 +12,11 @@
       rel="stylesheet"
     />
   </head>
-  <body>
+  <body class="bg-blue-500 pt-32">
     <section
-      class="max-w-xl p-10 mx-auto bg-white rounded-md shadow-md dark:bg-gray-800"
+      class="max-w-xl p-10 mx-auto bg-gray-900 bg-opacity-20 rounded-md shadow-md rounded-md shadow-md border-2 rounded-md"
     >
-      <h2
-        class="text-lg font-semibold text-gray-700 capitalize dark:text-white"
-      >
-        Sign Up
-      </h2>
+      <h2 class="text-lg font-semibold text-white capitalize">Sign Up</h2>
 
       <form
         hx-post="/users/register"
@@ -30,53 +26,45 @@
       >
         <div class="grid grid-cols-1 gap-6 mt-4 sm:grid-cols-1">
           <div>
-            <label class="text-gray-700 dark:text-gray-200" for="username"
-              >Username</label
-            >
+            <label class="text-white" for="username">Username</label>
             <input
               id="username"
               name="username"
               required
               type="text"
-              class="block w-full px-4 py-2 mt-2 text-gray-700 bg-white border border-gray-200 rounded-md dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 focus:border-blue-400 focus:ring-blue-300 focus:ring-opacity-40 dark:focus:border-blue-300 focus:outline-none focus:ring"
+              class="block w-full px-4 py-2 mt-2 text-gray-900 bg-white border border-gray-200 rounded-md dark:bg-gray-800 dark:border-gray-600 focus:border-blue-400 focus:ring-blue-300 focus:ring-opacity-40 dark:focus:border-blue-300 focus:outline-none focus:ring"
             />
           </div>
 
           <div>
-            <label class="text-gray-700 dark:text-gray-200" for="emailAddress"
-              >Email Address</label
-            >
+            <label class="text-white" for="emailAddress">Email Address</label>
             <input
               id="emailAddress"
               name="email"
               type="email"
-              class="block w-full px-4 py-2 mt-2 text-gray-700 bg-white border border-gray-200 rounded-md dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 focus:border-blue-400 focus:ring-blue-300 focus:ring-opacity-40 dark:focus:border-blue-300 focus:outline-none focus:ring"
+              class="block w-full px-4 py-2 mt-2 text-gray-900 bg-white border border-gray-200 rounded-md dark:bg-gray-800 dark:border-gray-600 focus:border-blue-400 focus:ring-blue-300 focus:ring-opacity-40 dark:focus:border-blue-300 focus:outline-none focus:ring"
             />
           </div>
 
           <div>
-            <label class="text-gray-700 dark:text-gray-200" for="password"
-              >Password</label
-            >
+            <label class="text-white" for="password">Password</label>
             <input
               name="password"
               required
               id="password"
               type="password"
-              class="block w-full px-4 py-2 mt-2 text-gray-700 bg-white border border-gray-200 rounded-md dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 focus:border-blue-400 focus:ring-blue-300 focus:ring-opacity-40 dark:focus:border-blue-300 focus:outline-none focus:ring"
+              class="block w-full px-4 py-2 mt-2 text-gray-900 bg-white border border-gray-200 rounded-md dark:bg-gray-800 dark:border-gray-600 focus:border-blue-400 focus:ring-blue-300 focus:ring-opacity-40 dark:focus:border-blue-300 focus:outline-none focus:ring"
             />
           </div>
 
           <div>
-            <label
-              class="text-gray-700 dark:text-gray-200"
-              for="passwordConfirmation"
+            <label class="text-white" for="passwordConfirmation"
               >Password Confirmation</label
             >
             <input
               id="passwordConfirmation"
               type="password"
-              class="block w-full px-4 py-2 mt-2 text-gray-700 bg-white border border-gray-200 rounded-md dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 focus:border-blue-400 focus:ring-blue-300 focus:ring-opacity-40 dark:focus:border-blue-300 focus:outline-none focus:ring"
+              class="block w-full px-4 py-2 mt-2 text-gray-900 bg-white border border-gray-200 rounded-md dark:bg-gray-800 :text-gray-300 dark:border-gray-600 focus:border-blue-400 focus:ring-blue-300 focus:ring-opacity-40 dark:focus:border-blue-300 focus:outline-none focus:ring"
             />
           </div>
         </div>
@@ -84,12 +72,12 @@
         <div class="flex justify-end mt-6">
           <button
             type="submit"
-            class="px-8 py-2.5 leading-5 text-white transition-colors duration-300 transform bg-gray-700 rounded-md hover:bg-gray-600 focus:outline-none focus:bg-gray-600"
+            class="px-8 py-2.5 leading-5 text-gray-900 transition-colors duration-300 transform bg-white rounded-md hover:bg-blue-100 focus:outline-none focus:bg-gray-600"
           >
             Sign Up
           </button>
         </div>
-        <p class="text-left">
+        <p class="text-left text-white hover:text-gray-100">
           <a href="../login">Already have an account?</a>
         </p>
       </form>
@@ -101,6 +89,7 @@
           // Check if the request was successful
           if (event.detail.xhr.status === 200) {
             alert("register success!");
+            window.location.href = "../fe/dashboard";
           } else {
             alert("register failed!");
           }
