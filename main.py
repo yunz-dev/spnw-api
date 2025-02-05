@@ -527,21 +527,18 @@ def dashboard(request: Request, cookies: Annotated[TokenCookie, Cookie()]):
     user_habits = user.get("habits", {})
     habits = []
     for typ, ids in user_habits.items():
-        for id in ids:
-            habit = client["habits"][typ].find_one({"_id": ObjectId(id)})
-            if not habit:
-                continue
+        habit_objs = client["habits"][typ].find({
+            "_id": {"$in": [ObjectId(id) for id in ids]}
+        })
+        for habit in habit_objs:
             streak_update(habit, typ)
-            habit = client["habits"][typ].find_one({"_id": ObjectId(id)})
-            habits.append(
-                {
-                    "title": habit["name"],
-                    "streak": habit["streak"],
-                    "done": check_habit_done(habit.get("last_done")),
-                    "id": id,
-                    "type": typ,
-                }
-            )
+            habits.append({
+                "title": habit["name"],
+                "streak": habit["streak"],
+                "done": check_habit_done(habit.get("last_done")),
+                "id": habit["_id"],
+                "type": typ,
+            })
     return templates.TemplateResponse("dashboard.html", {"request": request, "habits": habits})
 
 
