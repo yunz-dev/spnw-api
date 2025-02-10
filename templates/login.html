@@ -20,7 +20,7 @@
       <h2 class="text-lg font-semibold capitalize text-white">Login</h2>
 
       <form
-        hx-post="/users/login"
+        hx-post="/api/users/login"
         hx-swap="none"
         id="login-form"
         hx-ext="json-enc"
@@ -114,7 +114,7 @@
                 // localStorage.setItem("session_token", data.session_token);
               }
 
-              window.location.href = "../fe/dashboard";
+              window.location.href = "../dashboard";
             } catch (error) {
               console.error("Failed to parse response:", error);
             }

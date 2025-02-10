@@ -1,7 +1,7 @@
 import requests
 from pytest import fixture
 
-url = "http://127.0.0.1:8000/"
+url = "http://127.0.0.1:8000/api/"
 
 
 def test_normal_habit_delete(token: str):
