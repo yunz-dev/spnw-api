@@ -19,7 +19,7 @@
       <h2 class="text-lg font-semibold text-white capitalize">Sign Up</h2>
 
       <form
-        hx-post="/users/register"
+        hx-post="/api/users/register"
         hx-swap="none"
         id="register-form"
         hx-ext="json-enc"
@@ -89,7 +89,7 @@
           // Check if the request was successful
           if (event.detail.xhr.status === 200) {
             alert("register success!");
-            // window.location.href = "../fe/dashboard";
+            // window.location.href = "../dashboard";
             sendApiRequest();
           } else {
             alert("register failed!");
@@ -105,7 +105,7 @@
 
         try {
           // Send API request
-          const response = await fetch("../users/login", {
+          const response = await fetch("/api/users/login", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -137,7 +137,7 @@
                 // localStorage.setItem("session_token", data.session_token);
               }
 
-              window.location.href = "../fe/dashboard";
+              window.location.href = "../dashboard";
             } catch (error) {
               console.error("Failed to parse response:", error);
             }
