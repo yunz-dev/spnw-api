@@ -306,6 +306,7 @@ def streak_update(habit: dict, habit_type: str) -> None:
                 },
             },
         )
+        habit["streak"] = 0
 
 
 # Helper Functions for habits -------------------------------------------------
@@ -332,7 +333,6 @@ def get_habit(
     check_habit(habit_type, habit, user)
 
     streak_update(habit, habit_type)
-    habit = client["habits"][habit_type].find_one({"_id": ObjectId(hid)})
 
     return {
         "name": habit["name"],
@@ -558,7 +558,6 @@ def one_habit(cookies: Annotated[TokenCookie, Cookie()], hid: str, type: str):
     habit = habits.find_one({"_id": ObjectId(hid)})
     check_habit(type, habit, user)
     streak_update(habit, type)
-    habit = habits.find_one({"_id": ObjectId(hid)})
 
     habit_temp = templates.get_template("habit.html")
     return habit_temp.render(
