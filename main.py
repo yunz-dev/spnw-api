@@ -527,7 +527,7 @@ def dashboard(request: Request, cookies: Annotated[TokenCookie, Cookie()]):
     return templates.TemplateResponse("dashboard.html", {"request": request, "habits": habits})
 
 
-@app.get("/habit", response_class=HTMLResponse)
+@app.get("/fe/habit", response_class=HTMLResponse)
 def one_habit(cookies: Annotated[TokenCookie, Cookie()], hid: str, type: str):
     user_id = get_user_from_session(cookies.session_token)
     check_uid(user_id)
