@@ -8,8 +8,8 @@ import pytz
 from bson.objectid import ObjectId
 from fastapi import Cookie, FastAPI, Form, Header, HTTPException, Request, Response
 from fastapi.responses import HTMLResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, EmailStr
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
@@ -40,7 +40,7 @@ def read_root(request: Request):
     if get_user_from_session(cookie_token) is None:
         return RedirectResponse(url="/login", status_code=302)
     else:
-        return RedirectResponse(url="fe/dashboard", status_code=302)
+        return RedirectResponse(url="/dashboard", status_code=302)
 
 
 @app.get("/login", response_class=HTMLResponse)
@@ -51,11 +51,6 @@ def api_login(request: Request):
 @app.get("/register", response_class=HTMLResponse)
 def api_register(request: Request):
     return templates.TemplateResponse("register.html", {"request": request})
-
-
-@app.get("/items/{item_id}")
-def read_item(item_id: int, q: str = None):
-    return {"item_id": item_id, "q": q}
 
 
 #
@@ -132,7 +127,7 @@ def verify_pass(password: str, hashed_password: str) -> bool:
 #
 
 
-@app.delete("/users")
+@app.delete("/api/users")
 def delete_user(spnw_auth_token: Annotated[str | None, Header()]):
     token = spnw_auth_token
     uid = sessions.get(token, None)
@@ -149,7 +144,7 @@ def delete_user(spnw_auth_token: Annotated[str | None, Header()]):
 #  TODO: Add more security layers, e.g make password certain length
 
 
-@app.post("/users/register")
+@app.post("/api/users/register")
 async def register_user(user: UserRegistration):
     users = client["users"]["users"]
 
@@ -186,7 +181,7 @@ async def register_user(user: UserRegistration):
 # TODO: parse variables via header
 
 
-@app.post("/users/login")
+@app.post("/api/users/login")
 def login(user: UserLogin):
     valid, code = check_login(user)
     if valid:
@@ -195,7 +190,7 @@ def login(user: UserLogin):
         raise HTTPException(status_code=code, detail="Permission Denied")
 
 
-@app.post("/users/logout")
+@app.post("/api/users/logout")
 def logout(request: Request):
     cookie_token = request.cookies.get("session_token", None)
     if cookie_token is None:
@@ -208,13 +203,13 @@ def logout(request: Request):
         raise HTTPException(status_code=401, detail="Bad Token")
 
 
-# USER ENDPONTS ---------------------------------------------------------------
+# USER ENDPOINTS ---------------------------------------------------------------
 #
 #
 
 #
 #
-# HABIT ENDPONTS --------------------------------------------------------------
+# HABIT ENDPOINTS --------------------------------------------------------------
 
 
 class HabitAdd(BaseModel):
@@ -313,7 +308,7 @@ def streak_update(habit: dict, habit_type: str) -> None:
 #
 
 
-@app.get("/habit")
+@app.get("/api/habit")
 def get_habit(
     spnw_auth_token: Annotated[str | None, Header()], hid: str, habit_type: str
 ):
@@ -341,7 +336,7 @@ def get_habit(
     }
 
 
-@app.get("/habits")
+@app.get("/api/habits")
 def get_habits(spnw_auth_token: Annotated[str | None, Header()]):
     """gets all habits for given user"""
     user_id = get_user_from_session(spnw_auth_token)
@@ -354,7 +349,7 @@ def get_habits(spnw_auth_token: Annotated[str | None, Header()]):
     return user.get("habits", {})
 
 
-@app.put("/habits")
+@app.put("/api/habits")
 def update_habit(
     spnw_auth_token: Annotated[str | None, Header()],
     habit_info: HabitUpdate,
@@ -403,7 +398,7 @@ def update_habit(
     }
 
 
-@app.post("/habits")
+@app.post("/api/habits")
 def add_habits(
     spnw_auth_token: Annotated[str | None, Header()],
     habit_info: HabitAdd,
@@ -458,7 +453,7 @@ def add_habits(
     }
 
 
-@app.delete("/habits")
+@app.delete("/api/habits")
 def delete_habit(
     spnw_auth_token: Annotated[str | None, Header()], habit_info: HabitDelete
 ):
@@ -501,17 +496,7 @@ def delete_habit(
 # FE ENDPOINTS -----------------------------------------------------------------
 
 
-@app.get("/fe/test", response_class=HTMLResponse)
-def update():
-    return "<p>Hello from WORdsad!</p>"
-
-
-@app.post("/fe/submit", response_class=HTMLResponse)
-def submit(data: str = Form(...)):
-    return f"<p>You submitted: {data}</p>"
-
-
-@app.get("/fe/dashboard", response_class=HTMLResponse)
+@app.get("/dashboard", response_class=HTMLResponse)
 def dashboard(request: Request, cookies: Annotated[TokenCookie, Cookie()]):
     cookie_token = request.cookies.get("session_token", None)
     user_id = get_user_from_session(cookies.session_token)
@@ -527,19 +512,23 @@ def dashboard(request: Request, cookies: Annotated[TokenCookie, Cookie()]):
     user_habits = user.get("habits", {})
     habits = []
     for typ, ids in user_habits.items():
-        habit_objs = client["habits"][typ].find({
-            "_id": {"$in": [ObjectId(id) for id in ids]}
-        })
+        habit_objs = client["habits"][typ].find(
+            {"_id": {"$in": [ObjectId(id) for id in ids]}}
+        )
         for habit in habit_objs:
             streak_update(habit, typ)
-            habits.append({
-                "title": habit["name"],
-                "streak": habit["streak"],
-                "done": check_habit_done(habit.get("last_done")),
-                "id": habit["_id"],
-                "type": typ,
-            })
-    return templates.TemplateResponse("dashboard.html", {"request": request, "habits": habits})
+            habits.append(
+                {
+                    "title": habit["name"],
+                    "streak": habit["streak"],
+                    "done": check_habit_done(habit.get("last_done")),
+                    "id": habit["_id"],
+                    "type": typ,
+                }
+            )
+    return templates.TemplateResponse(
+        "dashboard.html", {"request": request, "habits": habits}
+    )
 
 
 @app.get("/fe/habit", response_class=HTMLResponse)

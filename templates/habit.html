@@ -27,7 +27,7 @@
             :disabled="checked"
             @click="streak++"
             hx-swap="none"
-            hx-put="/habits"
+            hx-put="/api/habits"
             hx-headers='js:{"spnw-auth-token": getAuthToken()}'
             hx-ext="json-enc"
             hx-vals='{"id": "{{id}}", "type": "{{type}}", "done": true}'
@@ -37,7 +37,7 @@
             x-show="delete_habit"
             hx-target="closest div"
             hx-swap="delete"
-            hx-delete="/habits"
+            hx-delete="/api/habits"
             hx-headers='js:{"spnw-auth-token": getAuthToken()}'
             hx-ext="json-enc"
             hx-vals='{"id": "{{id}}", "type": "{{type}}"}'
