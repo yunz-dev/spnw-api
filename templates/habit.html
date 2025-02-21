@@ -5,7 +5,65 @@
     hx-swap="outerHTML"
     class="flex flex-row items-center justify-between p-5 border-2 rounded-md w-full bg-gray-900 bg-opacity-20 text-white font-semibold text-lg"
 >
-    <h1>{{title}}</h1>
+    <span
+        class="flex flex-row gap-1 items-center"
+        x-data="{ edit: false, title: '{{title}}'}"
+    >
+        <!-- not editing -->
+        <h1 x-show="!edit" x-text="title"></h1>
+        <div
+            class="opacity-0 hover:opacity-100 transition cursor-pointer"
+            @click="edit = true"
+            x-show="!edit"
+        >
+            <svg class="size-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24">
+                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m14.304 4.844 2.852 2.852M7 7H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-4.5m2.409-9.91a2.017 2.017 0 0 1 0 2.853l-6.844 6.844L8 14l.713-3.565 6.844-6.844a2.015 2.015 0 0 1 2.852 0Z"/>
+            </svg>
+        </div>
+        <!-- editing -->
+        <form
+            hx-put="/api/habits"
+            hx-ext="json-enc"
+            hx-swap="none"
+            hx-headers='js:{"spnw-auth-token": getAuthToken(), "Accept": "text/html"}'
+            hx-vals='{"id": "{{id}}", "type": "{{type}}"}'
+            class="flex flex-row items-center gap-1"
+            x-data="{new_title: title}"
+        >
+            <input
+                x-show="edit"
+                type="text"
+                name="name"
+                value=""
+                class="w-3/4 text-black font-normal"
+                x-model="new_title"
+                style="display: none;"
+            >
+            <button
+                class="text-white"
+                type="button"
+                x-show="edit"
+                @click="edit=false, new_title = title"
+                style="display: none;"
+            >
+                <svg class="size-7 text-white" fill="currentColor" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M697.4 759.2l61.8-61.8L573.8 512l185.4-185.4-61.8-61.8L512 450.2 326.6 264.8l-61.8 61.8L450.2 512 264.8 697.4l61.8 61.8L512 573.8z"/>
+
+                </svg>
+            </button>
+            <button
+                type="submit"
+                x-show="edit"
+                style="display: none;"
+                @click="edit = false, title = new_title"
+                class="text-white"
+            >
+                <svg class="size-7 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 11.917 9.724 16.5 19 7.5"/>
+                </svg>
+            </button>
+        </form>
+    </span>
     <span
         style="min-width:100px;"
         class="flex flex-row justify-end gap-2 items-center"
